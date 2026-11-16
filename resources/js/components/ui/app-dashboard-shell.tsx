@@ -26,6 +26,7 @@ import {
   FileText,
   LayoutDashboard,
   LifeBuoy,
+  LogOut,
   Menu,
   Package,
   PanelLeftClose,
@@ -72,6 +73,13 @@ export interface DashboardNavItem {
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   badge?: string;
+  /**
+   * Permission yang dibutuhkan untuk melihat menu ini.
+   * Kosong = selalu tampil (semua user login boleh lihat).
+   */
+  permission?: string;
+  /** Beberapa permission sekaligus; cukup salah satu yang cocok. */
+  anyPermission?: string[];
 }
 
 export interface DashboardNavGroup {
@@ -119,6 +127,11 @@ export interface AppDashboardShellProps {
   disableAnimation?: boolean;
   className?: string;
   customContent?: ReactNode;
+  /**
+   * Permission user yang sedang login. Kalau tidak diisi, shell akan
+   * mengambil sendiri dari GET /api/me dan menyaring menu sesuai hak akses.
+   */
+  permissions?: string[];
 }
 
 export const DASHBOARD_NAV: DashboardNavGroup[] = [
@@ -126,22 +139,69 @@ export const DASHBOARD_NAV: DashboardNavGroup[] = [
     items: [
       { id: "overview", label: "Dashboard", icon: LayoutDashboard },
       { id: "analytics", label: "Analytics", icon: ChartNoAxesCombined },
-      { id: "orders", label: "Beton Orders", icon: ShoppingBag, badge: "12" },
-      { id: "hotmix-orders", label: "Hotmix Orders", icon: ShoppingBag },
-      { id: "batu-orders", label: "Batu Orders", icon: ShoppingBag },
-      { id: "customers", label: "Customer", icon: Users },
-      { id: "products", label: "Products Beton", icon: Package },
-      { id: "products-hotmix", label: "Products Hotmix", icon: Package },
-      { id: "products-batu", label: "Products Batu", icon: Package },
-      { id: "reports", label: "Reports", icon: FileText },
+      {
+        id: "orders",
+        label: "Beton Orders",
+        icon: ShoppingBag,
+        badge: "12",
+        anyPermission: ["data.view_own", "data.view_all"],
+      },
+      {
+        id: "hotmix-orders",
+        label: "Hotmix Orders",
+        icon: ShoppingBag,
+        anyPermission: ["data.view_own", "data.view_all"],
+      },
+      {
+        id: "batu-orders",
+        label: "Batu Orders",
+        icon: ShoppingBag,
+        anyPermission: ["data.view_own", "data.view_all"],
+      },
+      {
+        id: "customers",
+        label: "Customer",
+        icon: Users,
+        anyPermission: ["data.view_own", "data.view_all"],
+      },
+      {
+        id: "products",
+        label: "Products Beton",
+        icon: Package,
+        anyPermission: ["data.view_own", "data.view_all"],
+      },
+      {
+        id: "products-hotmix",
+        label: "Products Hotmix",
+        icon: Package,
+        anyPermission: ["data.view_own", "data.view_all"],
+      },
+      {
+        id: "products-batu",
+        label: "Products Batu",
+        icon: Package,
+        anyPermission: ["data.view_own", "data.view_all"],
+      },
+      {
+        id: "reports",
+        label: "Reports",
+        icon: FileText,
+        permission: "report.export",
+      },
     ],
   },
   {
     label: "Workspace",
     items: [
-      { id: "team", label: "Team", icon: UsersRound },
-      { id: "integrations", label: "Integrations", icon: Blocks, badge: "New" },
-      { id: "settings", label: "Settings", icon: Settings },
+      { id: "team", label: "Team", icon: UsersRound, permission: "user.manage" },
+      {
+        id: "integrations",
+        label: "Integrations",
+        icon: Blocks,
+        badge: "New",
+        permission: "user.manage",
+      },
+      { id: "settings", label: "Settings", icon: Settings, permission: "user.manage" },
     ],
   },
 ];
@@ -380,11 +440,71 @@ export function AppDashboardShell({
   disableAnimation = false,
   className,
   customContent,
+  permissions,
 }: AppDashboardShellProps) {
   const { style } = useAppBlockTheme(theme);
   const rootRef = useRef<HTMLDivElement>(null);
   const width = useElementWidth(rootRef);
   const narrow = width > 0 && width < DRAWER_BELOW;
+
+  const [granted, setGranted] = useState<string[] | null>(permissions ?? null);
+  const [profile, setProfile] = useState<{
+    name: string;
+    email: string;
+    role: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    if (permissions) {
+      setGranted(permissions);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/me", {
+      headers: { Accept: "application/json" },
+      credentials: "same-origin",
+    })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (cancelled) return;
+        setGranted(data?.user?.permissions ?? []);
+        if (data?.user) {
+          setProfile({
+            name: data.user.name ?? "",
+            email: data.user.email ?? "",
+            role: data.user.role ?? null,
+          });
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setGranted([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [permissions]);
+
+  const visibleNav = useMemo<DashboardNavGroup[]>(() => {
+    if (!granted) return nav;
+    return nav
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => {
+          if (item.permission && !granted.includes(item.permission)) {
+            return false;
+          }
+          if (
+            item.anyPermission &&
+            item.anyPermission.length > 0 &&
+            !item.anyPermission.some((p) => granted.includes(p))
+          ) {
+            return false;
+          }
+          return true;
+        }),
+      }))
+      .filter((group) => group.items.length > 0);
+  }, [nav, granted]);
 
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -398,7 +518,7 @@ export function AppDashboardShell({
   const series = useMemo(() => getSeries(range), [getSeries, range]);
   const rangeLong = RANGES.find((r) => r.id === range)?.long ?? "";
   const activeLabel =
-    nav.flatMap((g) => g.items).find((i) => i.id === active)?.label ??
+    visibleNav.flatMap((g) => g.items).find((i) => i.id === active)?.label ??
     "Dashboard";
 
   const navigate = (id: string) => {
@@ -441,17 +561,37 @@ export function AppDashboardShell({
     searchRef.current?.focus();
   };
 
+  const handleLogout = async () => {
+    const token = document
+      .querySelector('meta[name="csrf-token"]')
+      ?.getAttribute("content");
+    try {
+      await fetch("/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-TOKEN": token || "",
+        },
+        credentials: "same-origin",
+      });
+    } catch {
+      /* ignore */
+    }
+    window.location.href = "/login";
+  };
+
   const sidebar = (mode: "rail" | "drawer") => (
     <SidebarContent
       mode={mode}
       collapsed={mode === "rail" && collapsed}
       workspace={workspace}
-      user={user}
-      nav={nav}
+      user={profile ?? user}
+      nav={visibleNav}
       active={active}
       onNavigate={navigate}
       onToggleCollapsed={() => setCollapsed((v) => !v)}
       onClose={() => setDrawerOpen(false)}
+      onLogout={handleLogout}
     />
   );
 
@@ -643,6 +783,7 @@ function SidebarContent({
   onNavigate,
   onToggleCollapsed,
   onClose,
+  onLogout,
 }: {
   mode: "rail" | "drawer";
   collapsed: boolean;
@@ -653,6 +794,7 @@ function SidebarContent({
   onNavigate: (id: string) => void;
   onToggleCollapsed: () => void;
   onClose: () => void;
+  onLogout?: () => void | Promise<void>;
 }) {
   return (
     <>
@@ -854,6 +996,15 @@ function SidebarContent({
               <LifeBuoy />
             </IconButton>
           )}
+          <IconButton
+            label="Log out"
+            size="sm"
+            onClick={() => {
+              void onLogout?.();
+            }}
+          >
+            <LogOut />
+          </IconButton>
           {mode === "rail" && (
             <IconButton
               label={collapsed ? "Expand sidebar" : "Collapse sidebar"}

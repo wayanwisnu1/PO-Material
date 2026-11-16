@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -21,6 +22,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'role_id',
+        'is_active',
     ];
 
     /**
@@ -43,6 +46,49 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
+    }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    /**
+     * Check if user has a given permission (via their role).
+     */
+    public function hasPermission(string $permission): bool
+    {
+        return $this->role?->hasPermission($permission) ?? false;
+    }
+
+    /**
+     * Check if user has any of the given permissions.
+     *
+     * @param  array<int, string>  $permissions
+     */
+    public function hasAnyPermission(array $permissions): bool
+    {
+        return $this->role
+            ? $this->role->permissions()->whereIn('name', $permissions)->exists()
+            : false;
+    }
+
+    public function hasRole(string $role): bool
+    {
+        return $this->role?->name === $role;
+    }
+
+    /**
+     * All permission names for the user's role.
+     *
+     * @return array<int, string>
+     */
+    public function permissionNames(): array
+    {
+        return $this->role
+            ? $this->role->permissions()->pluck('name')->all()
+            : [];
     }
 }

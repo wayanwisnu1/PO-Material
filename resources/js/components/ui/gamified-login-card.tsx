@@ -18,26 +18,61 @@ export default function GamifiedLoginCard() {
   const [email, setEmail] = React.useState("")
   const [password, setPassword] = React.useState("")
   const [success, setSuccess] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+  const [loading, setLoading] = React.useState(false)
   const [particles, setParticles] = React.useState<ConfettiParticle[]>([])
 
-  const handleLogin = () => {
-    if (!email || !password) return
+  const handleLogin = async () => {
+    setError(null)
 
-    const newParticles: ConfettiParticle[] = Array.from({ length: 30 }).map((_, i) => ({
-      id: Date.now() + i,
-      x: 0,
-      y: 0,
-      rotate: Math.random() * 360,
-      color: colors[Math.floor(Math.random() * colors.length)],
-    }))
-    setParticles(newParticles)
-    setSuccess(true)
+    if (!email || !password) {
+      setError("Email dan password wajib diisi.")
+      return
+    }
 
-    setTimeout(() => setParticles([]), 1000)
+    setLoading(true)
+
+    try {
+      const response = await fetch('/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || data.errors?.email?.[0] || "Login gagal.")
+      }
+
+      const newParticles: ConfettiParticle[] = Array.from({ length: 30 }).map((_, i) => ({
+        id: Date.now() + i,
+        x: 0,
+        y: 0,
+        rotate: Math.random() * 360,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      }))
+      setParticles(newParticles)
+      setSuccess(true)
+
+      setTimeout(() => setParticles([]), 1000)
+      setTimeout(() => {
+        if (data.redirect) {
+          window.location.href = data.redirect
+        }
+      }, 1200)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Terjadi kesalahan.")
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden">
+    <div className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-gray-900">
 
       <AnimatePresence>
         {particles.map((p) => (
@@ -76,7 +111,8 @@ export default function GamifiedLoginCard() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:ring-purple-500"
+              className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus-visible:ring-purple-500"
+              disabled={loading}
             />
           </div>
           <div className="space-y-1">
@@ -87,21 +123,27 @@ export default function GamifiedLoginCard() {
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus:ring-purple-500"
+              className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus-visible:ring-purple-500"
+              disabled={loading}
             />
           </div>
         </div>
 
+        {error && (
+          <p className="text-sm text-center text-red-400">{error}</p>
+        )}
+
         <Button
           className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
           onClick={handleLogin}
+          disabled={loading || success}
         >
-          {success ? "Logged In!" : "Login"}
+          {success ? "Logged In!" : loading ? "Logging in..." : "Login"}
         </Button>
 
         {!success && (
           <p className="text-center text-sm text-gray-400 mt-2">
-            Don’t have an account?{" "}
+            Don&apos;t have an account?{" "}
             <a href="#" className="text-purple-400 hover:underline">Sign up</a>
           </p>
         )}
