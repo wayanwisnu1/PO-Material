@@ -23,6 +23,7 @@ export default defineConfig({
                 'resources/js/customers.tsx',
                 'resources/js/create-customers.tsx',
                 'resources/js/create-team.tsx',
+                'resources/js/edit-team.tsx',
                 'resources/js/create-products.tsx',
                 'resources/js/edit-products.tsx',
                 'resources/js/detail-products.tsx',

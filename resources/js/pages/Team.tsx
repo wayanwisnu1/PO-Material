@@ -17,25 +17,9 @@ interface User {
   } | null;
 }
 
-interface Role {
-  id: number;
-  name: string;
-  description: string;
-}
-
 export default function Team() {
   const [users, setUsers] = useState<User[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role_id: '',
-    is_active: true,
-  });
 
   const fetchUsers = async () => {
     try {
@@ -49,19 +33,8 @@ export default function Team() {
     }
   };
 
-  const fetchRoles = async () => {
-    try {
-      const res = await fetch('/api/users/roles');
-      const json = await res.json();
-      setRoles(json.data || []);
-    } catch (err) {
-      console.error('Fetch roles error:', err);
-    }
-  };
-
   useEffect(() => {
     fetchUsers();
-    fetchRoles();
   }, []);
 
   const handleNavigate = (id: string) => {
@@ -89,44 +62,7 @@ export default function Team() {
   };
 
   const openEditModal = (user: User) => {
-    setEditingUser(user);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      password: '', 
-      role_id: user.role?.id.toString() || '',
-      is_active: user.is_active,
-    });
-    setShowModal(true);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const url = editingUser ? `/api/users/${editingUser.id}` : '/api/users';
-    const method = editingUser ? 'PUT' : 'POST';
-
-    try {
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const json = await res.json();
-
-      if (res.ok) {
-        Swal.fire('Berhasil!', json.message, 'success');
-        setShowModal(false);
-        fetchUsers();
-      } else {
-        Swal.fire('Error!', json.message || 'Terjadi kesalahan.', 'error');
-      }
-    } catch (err) {
-      Swal.fire('Error!', 'Gagal menghubungkan ke server.', 'error');
-    }
+    window.location.href = `/dashboard/edit-team/${user.id}?from=team`;
   };
 
   const toggleStatus = async (user: User) => {
@@ -138,6 +74,8 @@ export default function Team() {
       showCancelButton: true,
       confirmButtonText: 'Ya',
       cancelButtonText: 'Batal',
+      backdrop: 'rgba(0,0,0,0.4)',
+      heightAuto: false,
     });
 
     if (result.isConfirmed) {
@@ -241,68 +179,6 @@ export default function Team() {
               </tbody>
             </table>
           </div>
-
-          {showModal && (
-            <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg shadow-xl w-full max-w-md">
-                <form onSubmit={handleSubmit}>
-                  <div className="px-6 py-4 border-b">
-                    <h3 className="text-lg font-bold">{editingUser ? 'Edit User' : 'Tambah User Baru'}</h3>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Nama Lengkap</label>
-                      <input
-                        type="text"
-                        required
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Email</label>
-                      <input
-                        type="email"
-                        required
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Password {editingUser && '(Biarkan kosong jika tidak ingin ganti)'}</label>
-                      <input
-                        type="password"
-                        required={!editingUser}
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Role</label>
-                      <select
-                        required
-                        className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-                        value={formData.role_id}
-                        onChange={(e) => setFormData({ ...formData, role_id: e.target.value })}
-                      >
-                        <option value="">Pilih Role</option>
-                        {roles.map((r) => (
-                          <option key={r.id} value={r.id}>{r.name} ({r.description})</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="px-6 py-4 bg-gray-50 rounded-b-lg flex justify-end space-x-2">
-                    <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 text-sm text-gray-700 border rounded-md">Batal</button>
-                    <button type="submit" className="px-4 py-2 text-sm text-white bg-orange-600 rounded-md hover:bg-orange-700">Simpan</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          )}
         </div>
       }
     />
