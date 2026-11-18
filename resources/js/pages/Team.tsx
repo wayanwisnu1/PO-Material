@@ -88,13 +88,28 @@ export default function Team() {
         });
         const json = await res.json();
         if (res.ok) {
-          Swal.fire('Berhasil!', json.message, 'success');
+          Swal.fire({
+            title: 'Berhasil!',
+            text: json.message,
+            icon: 'success',
+            heightAuto: false,
+          });
           fetchUsers();
         } else {
-          Swal.fire('Error!', json.message, 'error');
+          Swal.fire({
+            title: 'Error!',
+            text: json.message,
+            icon: 'error',
+            heightAuto: false,
+          });
         }
       } catch (err) {
-        Swal.fire('Error!', 'Gagal mengubah status.', 'error');
+        Swal.fire({
+          title: 'Error!',
+          text: 'Gagal mengubah status.',
+          icon: 'error',
+          heightAuto: false,
+        });
       }
     }
   };

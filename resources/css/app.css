@@ -161,4 +161,14 @@
         overflow-y: scroll !important;
         padding-right: 0 !important;
     }
+
+    /* Prevent SweetAlert2 from collapsing body height (breaks sidebar layout) */
+    body.swal2-height-auto {
+        height: 100% !important;
+    }
+
+    /* Prevent SweetAlert2 from hiding body overflow (causes scrollbar flash) */
+    body.swal2-shown:not(.swal2-no-backdrop):not(.swal2-toast-shown) {
+        overflow-y: scroll !important;
+    }
 }
