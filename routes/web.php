@@ -100,13 +100,23 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
     });
 
     Route::middleware('permission:data.edit_draft,data.edit_all')->group(function () {
-        Route::put('/purchase-orders/{id}', [App\Http\Controllers\Api\PurchaseOrderApiController::class, 'update']);
-        Route::put('/orders/{id}', [App\Http\Controllers\Api\OrderDetailApiController::class, 'update']);
+        Route::put('/purchase-orders/{id}', [App\Http\Controllers\Api\PurchaseOrderApiController::class, 'update'])
+            ->middleware('can.modify.order:update');
+        Route::put('/orders/{id}', [App\Http\Controllers\Api\OrderDetailApiController::class, 'update'])
+            ->middleware('can.modify.order:update');
         Route::put('/customers/{id}', [App\Http\Controllers\Api\CustomerDetailApiController::class, 'update']);
         Route::put('/suppliers/{id}', [App\Http\Controllers\Api\SupplierDetailApiController::class, 'update']);
         Route::put('/products/{id}', [App\Http\Controllers\Api\ProductApiController::class, 'update']);
         Route::put('/products-hotmix/{id}', [App\Http\Controllers\Api\ProductHotmixApiController::class, 'update']);
         Route::put('/products-batu/{id}', [App\Http\Controllers\Api\ProductBatuApiController::class, 'update']);
+    });
+
+    Route::middleware('permission:user.manage')->group(function () {
+        Route::get('/users', [App\Http\Controllers\Api\UserApiController::class, 'index']);
+        Route::get('/users/roles', [App\Http\Controllers\Api\UserApiController::class, 'roles']);
+        Route::post('/users', [App\Http\Controllers\Api\UserApiController::class, 'store']);
+        Route::put('/users/{id}', [App\Http\Controllers\Api\UserApiController::class, 'update']);
+        Route::patch('/users/{id}/toggle-active', [App\Http\Controllers\Api\UserApiController::class, 'toggleActive']);
     });
 
     Route::middleware('permission:data.delete')->group(function () {

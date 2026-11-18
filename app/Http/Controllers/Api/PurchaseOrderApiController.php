@@ -5,14 +5,23 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\PurchaseOrder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PurchaseOrderApiController extends Controller
 {
     public function index()
     {
-        $orders = PurchaseOrder::with('customer')
-            ->orderBy('po_date', 'desc')
-            ->paginate(50);
+        $query = PurchaseOrder::with('customer')->orderBy('po_date', 'desc');
+
+        if (Auth::user()->hasPermission('data.view_all')) {
+            // Semua data
+        } elseif (Auth::user()->hasPermission('data.view_own')) {
+            $query->where('created_by', Auth::id());
+        } else {
+            $query->whereRaw('1 = 0'); // Tidak boleh melihat data sama sekali
+        }
+
+        $orders = $query->paginate(50);
 
         return response()->json([
             'data' => $orders->items(),
@@ -27,26 +36,39 @@ class PurchaseOrderApiController extends Controller
 
     public function stats()
     {
+        $user = Auth::user();
+        $baseQuery = PurchaseOrder::query();
+
+        if ($user->hasPermission('data.view_all')) {
+            // Semua data
+        } elseif ($user->hasPermission('data.view_own')) {
+            $baseQuery->where('created_by', $user->id);
+        } else {
+            $baseQuery->whereRaw('1 = 0');
+        }
+
         $now = now();
         $startOfMonth = $now->copy()->startOfMonth();
-        
-        $totalOrders = PurchaseOrder::count();
-        $monthlyOrders = PurchaseOrder::where('po_date', '>=', $startOfMonth)->count();
-        $totalRevenue = PurchaseOrder::sum(\DB::raw('quantity * harga'));
-        $monthlyRevenue = PurchaseOrder::where('po_date', '>=', $startOfMonth)->sum(\DB::raw('quantity * harga'));
-        
+        $countQuery = clone $baseQuery;
+
+        $totalOrders = $countQuery->count();
+        $monthlyOrders = (clone $baseQuery)->where('po_date', '>=', $startOfMonth)->count();
+        $totalRevenue = (clone $baseQuery)->sum(\DB::raw('quantity * harga'));
+        $monthlyRevenue = (clone $baseQuery)->where('po_date', '>=', $startOfMonth)->sum(\DB::raw('quantity * harga'));
+
         // Data untuk chart (7 hari terakhir)
         $chartData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
-            $count = PurchaseOrder::whereDate('po_date', $date)->count();
+            $count = (clone $baseQuery)->whereDate('po_date', $date)->count();
             $chartData[] = [
                 'name' => now()->subDays($i)->format('d M'),
                 'value' => $count
             ];
         }
 
-        $recentOrders = PurchaseOrder::with('customer')
+        $recentOrders = (clone $baseQuery)
+            ->with('customer')
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
@@ -54,7 +76,7 @@ class PurchaseOrderApiController extends Controller
                 return [
                     'id' => $order->po_number,
                     'customer' => $order->customer->name ?? 'N/A',
-                    'email' => $order->po_type, // Gunakan po_type sebagai info tambahan
+                    'email' => $order->po_type,
                     'status' => $order->status,
                     'channel' => $order->lokasi_sumber,
                     'date' => $order->po_date->format('Y-m-d'),
@@ -74,8 +96,14 @@ class PurchaseOrderApiController extends Controller
 
     public function show($id)
     {
-        $order = PurchaseOrder::with(['customer'])
-            ->findOrFail($id);
+        $order = PurchaseOrder::with(['customer'])->findOrFail($id);
+
+        $user = Auth::user();
+        if (! $user->hasPermission('data.view_all')) {
+            if ($user->hasPermission('data.view_own') && $order->created_by !== $user->id) {
+                abort(403, 'Anda tidak berhak melihat data ini.');
+            }
+        }
 
         return response()->json([
             'data' => $order
@@ -109,9 +137,12 @@ class PurchaseOrderApiController extends Controller
         $lastPo = PurchaseOrder::orderBy('id', 'desc')->first();
         $nextNumber = ($lastPo ? intval(substr($lastPo->po_number, -4)) + 1 : 1);
         $validated['po_number'] = 'PO-' . date('Ym') . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
-        
-        // Set default status
-        $validated['status'] = 'draft';
+
+        // Normalisasi case status ke format database enum
+        $validated['status'] = $this->normalizeStatus($validated['status'] ?? 'draft');
+
+        // Set pembuat data
+        $validated['created_by'] = Auth::id();
 
         // Handle foto_po upload
         if ($request->hasFile('foto_po')) {
@@ -126,22 +157,6 @@ class PurchaseOrderApiController extends Controller
             'message' => 'Purchase Order berhasil dibuat',
             'data' => $order->load('customer')
         ], 201);
-    }
-
-    public function destroy($id)
-    {
-        $order = PurchaseOrder::findOrFail($id);
-        
-        // Delete foto jika ada
-        if ($order->foto_po && \Storage::disk('public')->exists($order->foto_po)) {
-            \Storage::disk('public')->delete($order->foto_po);
-        }
-        
-        $order->delete();
-
-        return response()->json([
-            'message' => 'Purchase Order berhasil dihapus'
-        ]);
     }
 
     public function update(Request $request, $id)
@@ -169,9 +184,20 @@ class PurchaseOrderApiController extends Controller
             'foto_po' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        if (isset($validated['status'])) {
+            $validated['status'] = $this->normalizeStatus($validated['status']);
+        }
+
+        // Admin Marketing tidak boleh mengubah status ke selain Draft/Pending
+        $user = Auth::user();
+        if ($user->hasPermission('data.edit_draft') && ! $user->hasPermission('data.edit_all')) {
+            if (! in_array($validated['status'] ?? $order->status, ['Draft', 'Pending'], true)) {
+                abort(403, 'Anda hanya dapat mengubah data berstatus Draft.');
+            }
+        }
+
         // Handle foto_po upload
         if ($request->hasFile('foto_po')) {
-            // Delete old foto if exists
             if ($order->foto_po && \Storage::disk('public')->exists($order->foto_po)) {
                 \Storage::disk('public')->delete($order->foto_po);
             }
@@ -186,5 +212,40 @@ class PurchaseOrderApiController extends Controller
             'message' => 'Purchase Order berhasil diupdate',
             'data' => $order->load('customer')
         ]);
+    }
+
+    public function destroy($id)
+    {
+        $order = PurchaseOrder::findOrFail($id);
+
+        if (! Auth::user()->hasPermission('data.delete')) {
+            abort(403, 'Anda tidak memiliki izin menghapus data.');
+        }
+
+        if ($order->foto_po && \Storage::disk('public')->exists($order->foto_po)) {
+            \Storage::disk('public')->delete($order->foto_po);
+        }
+
+        $order->delete();
+
+        return response()->json([
+            'message' => 'Purchase Order berhasil dihapus'
+        ]);
+    }
+
+    /**
+     * Normalisasi status input frontend (lowercase) ke format database enum.
+     */
+    protected function normalizeStatus(string $status): string
+    {
+        $map = [
+            'draft' => 'Draft',
+            'submitted' => 'Submited',
+            'approved' => 'Approved',
+            'delivered' => 'Delivered',
+            'cancelled' => 'Cancelled',
+        ];
+
+        return $map[strtolower($status)] ?? 'Draft';
     }
 }

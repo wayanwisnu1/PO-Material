@@ -10,6 +10,18 @@ import {
   type ReactNode,
   type SVGProps,
 } from "react";
+
+declare global {
+  interface Window {
+    __HALCYON_PROFILE__?: {
+      name: string;
+      email: string;
+      role: string | null;
+    } | null;
+    __HALCYON_PERMISSIONS__?: string[] | null;
+  }
+}
+
 import {
   ArrowDown,
   ArrowDownRight,
@@ -447,12 +459,35 @@ export function AppDashboardShell({
   const width = useElementWidth(rootRef);
   const narrow = width > 0 && width < DRAWER_BELOW;
 
-  const [granted, setGranted] = useState<string[] | null>(permissions ?? null);
+  const readCachedProfile = () => {
+    if (typeof window === "undefined") return null;
+    if (window.__HALCYON_PROFILE__) return window.__HALCYON_PROFILE__;
+    try {
+      const raw = window.sessionStorage.getItem("__halcyon_profile__");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+  const readCachedPermissions = (): string[] | null => {
+    if (typeof window === "undefined") return null;
+    if (window.__HALCYON_PERMISSIONS__) return window.__HALCYON_PERMISSIONS__;
+    try {
+      const raw = window.sessionStorage.getItem("__halcyon_permissions__");
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const [granted, setGranted] = useState<string[] | null>(
+    permissions ?? readCachedPermissions(),
+  );
   const [profile, setProfile] = useState<{
     name: string;
     email: string;
     role: string | null;
-  } | null>(null);
+  } | null>(readCachedProfile());
 
   useEffect(() => {
     if (permissions) {
@@ -467,13 +502,31 @@ export function AppDashboardShell({
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (cancelled) return;
-        setGranted(data?.user?.permissions ?? []);
-        if (data?.user) {
-          setProfile({
-            name: data.user.name ?? "",
-            email: data.user.email ?? "",
-            role: data.user.role ?? null,
-          });
+        const nextGranted = data?.user?.permissions ?? [];
+        setGranted(nextGranted);
+        const nextProfile = data?.user
+          ? {
+              name: data.user.name ?? "",
+              email: data.user.email ?? "",
+              role: data.user.role ?? null,
+            }
+          : null;
+        if (nextProfile) {
+          setProfile(nextProfile);
+          // Persist across full-page navigations so the footer is stable
+          // and never flashes the placeholder user for ~1s.
+          try {
+            window.sessionStorage.setItem(
+              "__halcyon_profile__",
+              JSON.stringify(nextProfile),
+            );
+            window.sessionStorage.setItem(
+              "__halcyon_permissions__",
+              JSON.stringify(nextGranted),
+            );
+          } catch {
+            /* ignore quota/private-mode errors */
+          }
         }
       })
       .catch(() => {

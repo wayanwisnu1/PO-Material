@@ -27,13 +27,20 @@ class PurchaseOrder extends Model
         'lokasi_sumber',
         'foto_po',
         'satuan',
+        'created_by',
     ];
 
     protected $casts = [
         'po_date' => 'date',
         'delivery_schedule' => 'datetime',
         'total_amount' => 'decimal:2',
+        'created_by' => 'integer',
     ];
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 
     public function supplier()
     {

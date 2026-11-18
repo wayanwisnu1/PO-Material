@@ -13,6 +13,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->alias([
             'permission' => \App\Http\Middleware\EnsureUserHasPermission::class,
+            'can.modify.order' => \App\Http\Middleware\EnsureCanModifyOrder::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
