@@ -18,6 +18,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/me', [AuthController::class, 'me'])->name('api.me');
 
     Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::view('/dashboard/create-team', 'create-team')->name('create-team');
+    Route::view('/dashboard/edit-team/{id}', 'edit-team')->name('edit-team');
     Route::view('/analytics', 'analytics')->name('analytics');
     Route::view('/reports', 'reports')->name('reports');
     Route::view('/team', 'team')->name('team');
@@ -114,6 +116,7 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
     Route::middleware('permission:user.manage')->group(function () {
         Route::get('/users', [App\Http\Controllers\Api\UserApiController::class, 'index']);
         Route::get('/users/roles', [App\Http\Controllers\Api\UserApiController::class, 'roles']);
+        Route::get('/users/{id}', [App\Http\Controllers\Api\UserApiController::class, 'show']);
         Route::post('/users', [App\Http\Controllers\Api\UserApiController::class, 'store']);
         Route::put('/users/{id}', [App\Http\Controllers\Api\UserApiController::class, 'update']);
         Route::patch('/users/{id}/toggle-active', [App\Http\Controllers\Api\UserApiController::class, 'toggleActive']);

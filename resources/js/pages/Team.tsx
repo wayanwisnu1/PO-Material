@@ -85,9 +85,7 @@ export default function Team() {
   };
 
   const openAddModal = () => {
-    setEditingUser(null);
-    setFormData({ name: '', email: '', password: '', role_id: '', is_active: true });
-    setShowModal(true);
+    window.location.href = '/dashboard/create-team?from=team';
   };
 
   const openEditModal = (user: User) => {

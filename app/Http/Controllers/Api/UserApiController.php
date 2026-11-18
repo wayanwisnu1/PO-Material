@@ -48,6 +48,27 @@ class UserApiController extends Controller
     }
 
     /**
+     * Detail user.
+     */
+    public function show(int $id): JsonResponse
+    {
+        $user = User::with('role')->findOrFail($id);
+        return response()->json([
+            'data' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_active' => $user->is_active,
+                'role_id' => $user->role_id,
+                'role' => $user->role ? [
+                    'id' => $user->role->id,
+                    'name' => $user->role->name,
+                ] : null,
+            ]
+        ]);
+    }
+
+    /**
      * Simpan user baru.
      */
     public function store(Request $request): JsonResponse
