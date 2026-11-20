@@ -37,16 +37,20 @@ export default function GamifiedLoginCard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
           'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
         },
         body: JSON.stringify({ email, password }),
       })
 
-      const data = await response.json()
-
       if (!response.ok) {
-        throw new Error(data.message || data.errors?.email?.[0] || "Login gagal.")
+        const errorData = await response.json().catch(() => ({}));
+        setLoading(false)
+        setError(errorData.message || errorData.errors?.email?.[0] || "Email atau password salah.")
+        return
       }
+
+      const data = await response.json()
 
       const newParticles: ConfettiParticle[] = Array.from({ length: 30 }).map((_, i) => ({
         id: Date.now() + i,
@@ -111,7 +115,7 @@ export default function GamifiedLoginCard() {
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus-visible:ring-purple-500"
+              className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus-visible:ring-[#ec7d43]"
               disabled={loading}
             />
           </div>
@@ -123,18 +127,24 @@ export default function GamifiedLoginCard() {
               placeholder="********"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus-visible:ring-purple-500"
+              className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 focus-visible:ring-[#ec7d43]"
               disabled={loading}
             />
           </div>
         </div>
 
         {error && (
-          <p className="text-sm text-center text-red-400">{error}</p>
+          <motion.div 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="p-3 rounded-lg bg-red-500/10 border border-red-500/50 text-sm text-center text-red-500"
+          >
+            {error}
+          </motion.div>
         )}
 
         <Button
-          className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white"
+          className="w-full mt-4 bg-[#ec7d43] hover:bg-[#d96a2d] text-white"
           onClick={handleLogin}
           disabled={loading || success}
         >
@@ -144,7 +154,7 @@ export default function GamifiedLoginCard() {
         {!success && (
           <p className="text-center text-sm text-gray-400 mt-2">
             Don&apos;t have an account?{" "}
-            <a href="#" className="text-purple-400 hover:underline">Sign up</a>
+            <a href="#" className="text-[#ec7d43] hover:underline">Sign up</a>
           </p>
         )}
       </motion.div>

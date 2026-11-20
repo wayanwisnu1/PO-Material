@@ -996,30 +996,6 @@ function SidebarContent({
           collapsed && "px-2",
         )}
       >
-        {!collapsed && (
-          <div className="mb-2.5 rounded-[12px] border border-[color:var(--bjork-border)] bg-[var(--bjork-surface)] p-3 shadow-[var(--bjork-shadow-soft)]">
-            <div className="flex items-baseline justify-between text-[12px]">
-              <span className="font-medium">Event quota</span>
-              <span className="font-mono tabular-nums text-[color:var(--bjork-text-muted)]">
-                8.2M / 10M
-              </span>
-            </div>
-            <div
-              role="meter"
-              aria-label="Event quota used"
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={82}
-              aria-valuetext="82 percent used"
-              className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--bjork-surface-active)]"
-            >
-              <div className="h-full w-[82%] rounded-full bg-[var(--bjork-accent)]" />
-            </div>
-            <p className="mt-2 text-[11.5px] leading-snug text-[color:var(--bjork-text-muted)]">
-              Resets in 23 days.
-            </p>
-          </div>
-        )}
         <div
           className={cn("flex items-center gap-1", collapsed ? "flex-col" : "")}
         >
