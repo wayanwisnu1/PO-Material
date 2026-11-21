@@ -182,4 +182,21 @@ class UserApiController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Hapus user secara permanen.
+     */
+    public function destroy(int $id): JsonResponse
+    {
+        $user = User::findOrFail($id);
+
+        // Hindari menghapus diri sendiri
+        if ($user->id === auth()->id()) {
+            return response()->json(['message' => 'Tidak bisa menghapus akun sendiri.'], 403);
+        }
+
+        $user->delete();
+
+        return response()->json(['message' => 'User berhasil dihapus.']);
+    }
 }

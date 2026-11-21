@@ -150,7 +150,6 @@ export const DASHBOARD_NAV: DashboardNavGroup[] = [
   {
     items: [
       { id: "overview", label: "Dashboard", icon: LayoutDashboard },
-      { id: "analytics", label: "Analytics", icon: ChartNoAxesCombined },
       {
         id: "orders",
         label: "Beton Orders",
@@ -1020,11 +1019,6 @@ function SidebarContent({
               </span>
             )}
           </button>
-          {!collapsed && (
-            <IconButton label="Help and support" size="sm">
-              <LifeBuoy />
-            </IconButton>
-          )}
           <IconButton
             label="Log out"
             size="sm"

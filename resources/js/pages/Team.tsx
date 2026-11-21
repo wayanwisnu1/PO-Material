@@ -114,6 +114,56 @@ export default function Team() {
     }
   };
 
+  const handleDelete = async (user: User) => {
+    const result = await Swal.fire({
+      title: `Hapus User?`,
+      text: `Akun ${user.name} akan dihapus permanen.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+      backdrop: 'rgba(0,0,0,0.4)',
+      heightAuto: false,
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const res = await fetch(`/api/users/${user.id}`, {
+          method: 'DELETE',
+          headers: {
+            'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content || '',
+            'Accept': 'application/json',
+          },
+        });
+        const json = await res.json();
+        if (res.ok) {
+          Swal.fire({
+            title: 'Dihapus!',
+            text: json.message,
+            icon: 'success',
+            heightAuto: false,
+          });
+          fetchUsers();
+        } else {
+          Swal.fire({
+            title: 'Error!',
+            text: json.message,
+            icon: 'error',
+            heightAuto: false,
+          });
+        }
+      } catch (err) {
+        Swal.fire({
+          title: 'Error!',
+          text: 'Gagal menghapus user.',
+          icon: 'error',
+          heightAuto: false,
+        });
+      }
+    }
+  };
+
   return (
     <AppDashboardShell
       workspace={{ name: 'PO Material Beton', plan: 'Professional' }}
@@ -184,9 +234,10 @@ export default function Team() {
                       </td>
                       <td className="px-6 py-4 text-right text-sm font-medium space-x-2">
                         <button onClick={() => openEditModal(u)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
-                        <button onClick={() => toggleStatus(u)} className={u.is_active ? 'text-red-600 hover:text-red-900' : 'text-green-600 hover:text-green-900'}>
+                        <button onClick={() => toggleStatus(u)} className={u.is_active ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}>
                           {u.is_active ? 'Nonaktifkan' : 'Aktifkan'}
                         </button>
+                        <button onClick={() => handleDelete(u)} className="text-red-600 hover:text-red-900">Hapus</button>
                       </td>
                     </tr>
                   ))

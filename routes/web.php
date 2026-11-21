@@ -120,6 +120,7 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
         Route::post('/users', [App\Http\Controllers\Api\UserApiController::class, 'store']);
         Route::put('/users/{id}', [App\Http\Controllers\Api\UserApiController::class, 'update']);
         Route::patch('/users/{id}/toggle-active', [App\Http\Controllers\Api\UserApiController::class, 'toggleActive']);
+        Route::delete('/users/{id}', [App\Http\Controllers\Api\UserApiController::class, 'destroy']);
     });
 
     Route::middleware('permission:data.delete')->group(function () {
