@@ -10,7 +10,7 @@ class SupplierApiController extends Controller
 {
     public function index()
     {
-        $suppliers = Supplier::orderBy('name', 'asc')->get();
+        $suppliers = Supplier::with(['creator', 'updater'])->orderBy('name', 'asc')->get();
 
         return response()->json([
             'data' => $suppliers

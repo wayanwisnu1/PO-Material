@@ -98,7 +98,7 @@ export default function Dashboard() {
 
   return (
     <AppDashboardShell
-      workspace={{ name: 'PO Material Beton', plan: 'Dashboard Operasional' }}
+      workspace={{ name: 'PO Material HBP', plan: 'Dashboard Operasional' }}
       user={{ name: 'Admin', email: 'admin@pomaterial.co.id' }}
       orders={stats?.recent_orders || []}
       getSeries={getSeries}

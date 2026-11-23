@@ -36,6 +36,7 @@ import {
   ChevronsUpDown,
   Download,
   FileText,
+  History,
   LayoutDashboard,
   LifeBuoy,
   LogOut,
@@ -154,7 +155,6 @@ export const DASHBOARD_NAV: DashboardNavGroup[] = [
         id: "orders",
         label: "Beton Orders",
         icon: ShoppingBag,
-        badge: "12",
         anyPermission: ["data.view_own", "data.view_all"],
       },
       {
@@ -213,6 +213,7 @@ export const DASHBOARD_NAV: DashboardNavGroup[] = [
         permission: "user.manage",
       },
       { id: "settings", label: "Settings", icon: Settings, permission: "user.manage" },
+      { id: "activity-logs", label: "Activity Logs", icon: History, permission: "data.view_all" },
     ],
   },
 ];
@@ -588,6 +589,10 @@ export function AppDashboardShell({
     }
     if (id === 'products-batu') {
       window.location.href = '/products-batu';
+      return;
+    }
+    if (id === 'activity-logs') {
+      window.location.href = '/activity-logs';
       return;
     }
     setActive(id);

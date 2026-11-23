@@ -58,7 +58,7 @@ export default function Products() {
 
   return (
     <AppDashboardShell
-      workspace={{ name: 'PO Material Beton', plan: 'Professional' }}
+      workspace={{ name: 'PO Material HBP', plan: 'Professional' }}
       user={{ name: 'Admin User', email: 'admin@pomaterial.co.id' }}
       orders={orders}
       getSeries={sampleDashboardSeries}

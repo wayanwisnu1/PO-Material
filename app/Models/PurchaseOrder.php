@@ -28,6 +28,7 @@ class PurchaseOrder extends Model
         'foto_po',
         'satuan',
         'created_by',
+        'updated_by',
     ];
 
     protected $casts = [
@@ -35,11 +36,17 @@ class PurchaseOrder extends Model
         'delivery_schedule' => 'datetime',
         'total_amount' => 'decimal:2',
         'created_by' => 'integer',
+        'updated_by' => 'integer',
     ];
 
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
     }
 
     public function supplier()

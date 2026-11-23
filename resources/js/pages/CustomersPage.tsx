@@ -75,7 +75,7 @@ export default function CustomersPage() {
 
   return (
     <AppDashboardShell
-      workspace={{ name: 'PO Material Beton', plan: 'Professional' }}
+      workspace={{ name: 'PO Material HBP', plan: 'Professional' }}
       user={{ name: 'Admin User', email: 'admin@pomaterial.co.id' }}
       orders={customers.map(c => ({
         id: c.id?.toString() || '',
@@ -121,6 +121,8 @@ export default function CustomersPage() {
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Telepon</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Dibuat Oleh</th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Terakhir Diubah</th>
                   <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Terdaftar</th>
                   <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Aksi</th>
                 </tr>
@@ -151,6 +153,12 @@ export default function CustomersPage() {
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm text-gray-900">{c.phone}</div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="text-sm text-gray-500">{c.creator ? c.creator.name : <span className="text-gray-400">Sistem</span>}</div>
+                      </td>
+                      <td className="whitespace-nowrap px-6 py-4">
+                        <div className="text-sm text-gray-500">{c.updater ? c.updater.name : (c.creator ? '-' : <span className="text-gray-400">Sistem</span>)}</div>
                       </td>
                       <td className="whitespace-nowrap px-6 py-4">
                         <div className="text-sm text-gray-900">{c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID') : '-'}</div>

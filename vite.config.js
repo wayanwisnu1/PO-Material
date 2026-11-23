@@ -45,6 +45,7 @@ export default defineConfig({
                 'resources/js/detail-batu-orders.tsx',
                 'resources/js/edit-batu-orders.tsx',
                 'resources/js/create-suppliers.tsx',
+                'resources/js/activity-logs.tsx',
                 'resources/js/edit-suppliers.tsx',
                 'resources/js/detail-suppliers.tsx',
                 'resources/js/blade.js',

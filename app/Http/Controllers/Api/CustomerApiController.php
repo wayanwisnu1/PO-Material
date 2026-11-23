@@ -10,7 +10,7 @@ class CustomerApiController extends Controller
 {
     public function index()
     {
-        $customers = Customer::orderBy('name', 'asc')->get();
+        $customers = Customer::with(['creator', 'updater'])->orderBy('name', 'asc')->get();
 
         return response()->json([
             'data' => $customers

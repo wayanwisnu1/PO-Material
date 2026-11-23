@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Auth;
+
 class CustomerDetailApiController extends Controller
 {
     public function show($id)
     {
-        $customer = Customer::findOrFail($id);
+        $customer = Customer::with(['creator', 'updater'])->findOrFail($id);
 
         return response()->json([
             'data' => $customer
@@ -27,6 +29,7 @@ class CustomerDetailApiController extends Controller
             'address' => 'required|string',
         ]);
 
+        $validated['created_by'] = Auth::id();
         $customer = Customer::create($validated);
 
         return response()->json([
@@ -47,6 +50,7 @@ class CustomerDetailApiController extends Controller
             'address' => 'required|string',
         ]);
 
+        $validated['updated_by'] = Auth::id();
         $customer->update($validated);
 
         return response()->json([

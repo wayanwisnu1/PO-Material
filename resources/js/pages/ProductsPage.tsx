@@ -51,7 +51,7 @@ export default function ProductsPage() {
 
   return (
     <AppDashboardShell
-      workspace={{ name: 'PO Material Beton', plan: 'Professional' }}
+      workspace={{ name: 'PO Material HBP', plan: 'Professional' }}
       user={{ name: 'Admin User', email: 'admin@pomaterial.co.id' }}
       orders={[]}
       getSeries={sampleDashboardSeries}
@@ -81,19 +81,27 @@ export default function ProductsPage() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Nama Barang</th>
                   <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Deskripsi</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Dibuat Oleh</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase text-gray-500">Terakhir Diubah</th>
                   <th className="px-6 py-3 text-right text-xs font-medium uppercase text-gray-500">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {loading ? (
-                  <tr><td colSpan={3} className="px-6 py-4 text-center text-sm">Memuat...</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-4 text-center text-sm">Memuat...</td></tr>
                 ) : products.length === 0 ? (
-                  <tr><td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">Belum ada produk</td></tr>
+                  <tr><td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">Belum ada produk</td></tr>
                 ) : (
                   products.map((p) => (
                     <tr key={p.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">{p.name}</td>
                       <td className="px-6 py-4 text-sm text-gray-500">{p.description || '-'}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {p.creator ? p.creator.name : <span className="text-gray-400">Sistem</span>}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        {p.updater ? p.updater.name : (p.creator ? '-' : <span className="text-gray-400">Sistem</span>)}
+                      </td>
                       <td className="px-6 py-4 text-right text-sm font-medium space-x-2">
                         <a href={`/dashboard/detail-products/${p.id}`} className="text-blue-600">Detail</a>
                         <a href={`/dashboard/edit-products/${p.id}`} className="text-indigo-600">Edit</a>

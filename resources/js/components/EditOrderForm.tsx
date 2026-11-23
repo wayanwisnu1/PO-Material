@@ -45,7 +45,7 @@ export default function EditOrderForm({ orderId, onSuccess, onCancel }: EditOrde
         setCustomers(customersData.data || []);
         const order = orderData.data;
         setFormData({
-          po_date: order.po_date || '',
+          po_date: order.po_date ? order.po_date.substring(0, 10) : '',
           po_type: order.po_type || 'beton',
           nama_marketing: order.nama_marketing || '',
           customer_id: order.customer_id || '',
@@ -55,7 +55,7 @@ export default function EditOrderForm({ orderId, onSuccess, onCancel }: EditOrde
           harga: order.harga || '',
           buyer_address: order.buyer_address || '',
           delivery_address: order.delivery_address || '',
-          delivery_schedule: order.delivery_schedule || '',
+          delivery_schedule: order.delivery_schedule ? order.delivery_schedule.substring(0, 10) : '',
           payment_terms: order.payment_terms || 'cash',
           payment_days: order.payment_days || '',
           status: order.status || 'draft',

@@ -8,6 +8,8 @@ interface Supplier {
   email: string;
   address: string;
   created_at: string;
+  creator?: { name: string };
+  updater?: { name: string };
 }
 
 export default function SuppliersContent() {
@@ -87,6 +89,12 @@ export default function SuppliersContent() {
                   Email
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Dibuat Oleh
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
+                  Terakhir Diubah
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">
                   Tanggal Dibuat
                 </th>
                 <th className="relative px-6 py-3">
@@ -121,6 +129,12 @@ export default function SuppliersContent() {
                     </td>
                     <td className="whitespace-nowrap px-6 py-4">
                       <div className="text-sm text-gray-500">{supplier.email}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm text-gray-500">{supplier.creator ? supplier.creator.name : <span className="text-gray-400">Sistem</span>}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm text-gray-500">{supplier.updater ? supplier.updater.name : (supplier.creator ? '-' : <span className="text-gray-400">Sistem</span>)}</div>
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500">
                       {formatDate(supplier.created_at)}

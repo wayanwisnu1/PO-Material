@@ -56,7 +56,7 @@ export default function EditHotmixOrderForm({ orderId, onSuccess, onCancel }: Ed
         setProducts(productsData.data || productsData || []);
         const order = orderData.data;
         setFormData({
-          po_date: order.po_date || '',
+          po_date: order.po_date ? order.po_date.substring(0, 10) : '',
           po_type: order.po_type || 'hotmix',
           nama_marketing: order.nama_marketing || '',
           customer_id: order.customer_id || '',

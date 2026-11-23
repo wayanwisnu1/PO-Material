@@ -52,9 +52,9 @@ export default function EditBatuOrderForm({ orderId, onSuccess, onCancel }: Edit
         setProducts(productsData.data || []);
         const order = orderData.data;
         setFormData({
-          po_date: order.po_date || '',
+          po_date: order.po_date ? order.po_date.substring(0, 10) : '',
           po_type: order.po_type || 'batu',
-          delivery_schedule: order.delivery_schedule || '',
+          delivery_schedule: order.delivery_schedule ? order.delivery_schedule.substring(0, 10) : '',
           nama_marketing: order.nama_marketing || '',
           customer_id: order.customer_id || '',
           buyer_address: order.buyer_address || '',

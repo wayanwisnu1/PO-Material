@@ -7,5 +7,15 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     //
-    protected $fillable = ['name', 'description', 'price'];
+    protected $fillable = ['name', 'description', 'price', 'created_by', 'updated_by', 'deleted_by'];
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 }

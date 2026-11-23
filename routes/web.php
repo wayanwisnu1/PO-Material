@@ -36,6 +36,10 @@ Route::middleware(['auth'])->group(function () {
     Route::view('/products-hotmix', 'products-hotmix')->name('products-hotmix');
     Route::view('/products-batu', 'products-batu')->name('products-batu');
 
+    Route::middleware('permission:data.view_all')->group(function () {
+        Route::view('/activity-logs', 'activity-logs')->name('activity-logs');
+    });
+
     Route::middleware('permission:data.create')->group(function () {
         Route::view('/dashboard/create-orders', 'create-orders')->name('create-orders');
         Route::view('/dashboard/create-hotmix-orders', 'create-hotmix-orders')->name('create-hotmix-orders');
@@ -90,6 +94,8 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
 
         Route::get('/products-batu', [App\Http\Controllers\Api\ProductBatuApiController::class, 'index']);
         Route::get('/products-batu/{id}', [App\Http\Controllers\Api\ProductBatuApiController::class, 'show']);
+        Route::get('/activity-logs', [App\Http\Controllers\Api\ActivityLogApiController::class, 'getLogs']);
+        Route::get('/activity-logs/{subjectType}/{subjectId}', [App\Http\Controllers\Api\ActivityLogApiController::class, 'getLogs']);
     });
 
     Route::middleware('permission:data.create')->group(function () {

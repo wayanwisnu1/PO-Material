@@ -11,7 +11,7 @@ class PurchaseOrderApiController extends Controller
 {
     public function index()
     {
-        $query = PurchaseOrder::with('customer')->orderBy('po_date', 'desc');
+        $query = PurchaseOrder::with(['customer', 'creator', 'updater'])->orderBy('po_date', 'desc');
 
         if (Auth::user()->hasPermission('data.view_all')) {
             // Semua data
@@ -96,7 +96,7 @@ class PurchaseOrderApiController extends Controller
 
     public function show($id)
     {
-        $order = PurchaseOrder::with(['customer'])->findOrFail($id);
+        $order = PurchaseOrder::with(['customer', 'creator', 'updater'])->findOrFail($id);
 
         $user = Auth::user();
         if (! $user->hasPermission('data.view_all')) {
@@ -127,7 +127,7 @@ class PurchaseOrderApiController extends Controller
             'delivery_schedule' => 'required|date',
             'payment_terms' => 'required|in:cash,termin,invoice',
             'payment_days' => 'nullable|integer',
-            'status' => 'nullable|in:draft,submitted,approved,delivered,cancelled',
+            'status' => 'nullable|in:draft,submitted,approved,delivered,cancelled,Draft,Submited,Submitted,Approved,Delivered,Cancelled',
             'jenis_transaksi' => 'required|in:F,NF',
             'lokasi_sumber' => 'required|string',
             'foto_po' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -153,6 +153,16 @@ class PurchaseOrderApiController extends Controller
 
         $order = PurchaseOrder::create($validated);
 
+        // Log Activity: data baru dibuat
+        \App\Models\ActivityLog::create([
+            'user_id' => Auth::id(),
+            'subject_type' => 'PurchaseOrder',
+            'subject_id' => $order->id,
+            'description' => 'Menambahkan data PO ' . $order->po_number,
+            'old_data' => null,
+            'new_data' => $order->toArray(),
+        ]);
+
         return response()->json([
             'message' => 'Purchase Order berhasil dibuat',
             'data' => $order->load('customer')
@@ -162,9 +172,10 @@ class PurchaseOrderApiController extends Controller
     public function update(Request $request, $id)
     {
         $order = PurchaseOrder::findOrFail($id);
+        $oldData = $order->toArray();
 
         $validated = $request->validate([
-            'po_date' => 'required|date',
+            'po_date' => 'sometimes|nullable|date',
             'po_type' => 'required|in:beton,batu,hotmix',
             'nama_marketing' => 'required|string',
             'customer_id' => 'required|exists:customers,id',
@@ -175,18 +186,28 @@ class PurchaseOrderApiController extends Controller
             'harga' => 'required|numeric|min:0',
             'buyer_address' => 'required|string',
             'delivery_address' => 'required|string',
-            'delivery_schedule' => 'required|date',
+            'delivery_schedule' => 'sometimes|nullable|date',
             'payment_terms' => 'required|in:cash,termin,invoice',
             'payment_days' => 'nullable|integer',
-            'status' => 'nullable|in:draft,submitted,approved,delivered,cancelled',
+            'status' => 'nullable|in:draft,submitted,approved,delivered,cancelled,Draft,Submited,Submitted,Approved,Delivered,Cancelled',
             'jenis_transaksi' => 'required|in:F,NF',
             'lokasi_sumber' => 'required|string',
             'foto_po' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
+        // Field tanggal yang dikirim kosong tidak boleh menimpa nilai lama.
+        foreach (['po_date', 'delivery_schedule'] as $dateField) {
+            if (array_key_exists($dateField, $validated) && blank($validated[$dateField])) {
+                unset($validated[$dateField]);
+            }
+        }
+
         if (isset($validated['status'])) {
             $validated['status'] = $this->normalizeStatus($validated['status']);
         }
+
+        // Set pengedit data
+        $validated['updated_by'] = Auth::id();
 
         // Admin Marketing tidak boleh mengubah status ke selain Draft/Pending
         $user = Auth::user();
@@ -208,6 +229,16 @@ class PurchaseOrderApiController extends Controller
 
         $order->update($validated);
 
+        // Log Activity
+        \App\Models\ActivityLog::create([
+            'user_id' => Auth::id(),
+            'subject_type' => 'PurchaseOrder',
+            'subject_id' => $order->id,
+            'description' => 'Update PO: ' . $order->po_number,
+            'old_data' => $oldData,
+            'new_data' => $order->fresh()->toArray(),
+        ]);
+
         return response()->json([
             'message' => 'Purchase Order berhasil diupdate',
             'data' => $order->load('customer')
@@ -226,6 +257,16 @@ class PurchaseOrderApiController extends Controller
             \Storage::disk('public')->delete($order->foto_po);
         }
 
+        // Log Activity: data dihapus
+        \App\Models\ActivityLog::create([
+            'user_id' => Auth::id(),
+            'subject_type' => 'PurchaseOrder',
+            'subject_id' => $order->id,
+            'description' => 'Menghapus data PO ' . $order->po_number,
+            'old_data' => $order->toArray(),
+            'new_data' => null,
+        ]);
+
         $order->delete();
 
         return response()->json([
@@ -241,11 +282,18 @@ class PurchaseOrderApiController extends Controller
         $map = [
             'draft' => 'Draft',
             'submitted' => 'Submited',
+            'submited' => 'Submited', // Handle typo in DB if exists
             'approved' => 'Approved',
             'delivered' => 'Delivered',
             'cancelled' => 'Cancelled',
+            'Draft' => 'Draft',
+            'Submited' => 'Submited',
+            'Submitted' => 'Submited',
+            'Approved' => 'Approved',
+            'Delivered' => 'Delivered',
+            'Cancelled' => 'Cancelled',
         ];
 
-        return $map[strtolower($status)] ?? 'Draft';
+        return $map[$status] ?? $map[strtolower($status)] ?? 'Draft';
     }
 }

@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 
+use Illuminate\Support\Facades\Auth;
+
 class SupplierDetailApiController extends Controller
 {
     public function show($id)
     {
-        $supplier = Supplier::findOrFail($id);
+        $supplier = Supplier::with(['creator', 'updater'])->findOrFail($id);
 
         return response()->json([
             'data' => $supplier
@@ -27,6 +29,7 @@ class SupplierDetailApiController extends Controller
             'address' => 'required|string',
         ]);
 
+        $validated['created_by'] = Auth::id();
         $supplier = Supplier::create($validated);
 
         return response()->json([
@@ -47,6 +50,7 @@ class SupplierDetailApiController extends Controller
             'address' => 'required|string',
         ]);
 
+        $validated['updated_by'] = Auth::id();
         $supplier->update($validated);
 
         return response()->json([

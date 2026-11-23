@@ -63,20 +63,27 @@ const getStatus = (status?: string) =>
 
 export default function DetailHotmixOrderView({ orderId, onBack }: DetailHotmixOrderViewProps) {
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
+  const [logs, setLogs] = useState<any[]>([]);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    fetch('/api/me').then(res => res.json()).then(data => setUser(data.user));
     fetch(`/api/purchase-orders/${orderId}`)
       .then(res => res.json())
       .then(data => {
         setOrder(data.data);
         setLoading(false);
-      })
-      .catch(() => {
-        alert('Gagal memuat data');
-        setLoading(false);
       });
   }, [orderId]);
+
+  useEffect(() => {
+    if (user?.permissions.includes('data.view_all')) {
+      fetch(`/api/activity-logs/PurchaseOrder/${orderId}`)
+        .then(res => res.json())
+        .then(data => setLogs(data));
+    }
+  }, [orderId, user]);
 
   const formatRupiah = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -279,7 +286,41 @@ export default function DetailHotmixOrderView({ orderId, onBack }: DetailHotmixO
         </div>
       )}
 
-      <div className="text-sm text-gray-500 text-center py-4">
+      {user?.permissions.includes('data.view_all') && logs.length > 0 && (
+        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div className="px-6 py-4 border-b bg-gray-50">
+            <h3 className="text-lg font-medium text-gray-900">Riwayat Perubahan (Admin Only)</h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Waktu</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktivitas</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {logs.map((log: any) => (
+                  <tr key={log.id}>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {new Date(log.created_at).toLocaleString('id-ID')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {log.user?.name || 'Sistem'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-500">
+                      {log.description}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div className="text-sm text-gray-500 text-center">
         <p>PO dibuat: {formatDate(order.created_at)} • Terakhir diperbarui: {formatDate(order.updated_at)}</p>
       </div>
     </div>
