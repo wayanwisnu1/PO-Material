@@ -30,6 +30,7 @@ export default function Orders() {
     submitted: 'bg-blue-200 text-blue-800',
     approved: 'bg-green-200 text-green-800',
     delivered: 'bg-purple-200 text-purple-800',
+    received: 'bg-emerald-200 text-emerald-800',
     cancelled: 'bg-red-200 text-red-800',
   };
 

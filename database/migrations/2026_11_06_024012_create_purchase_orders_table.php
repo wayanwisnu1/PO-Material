@@ -23,7 +23,7 @@ return new class extends Migration
             $table->enum('payment_terms', ['cash', 'termin', 'invoice'])->default('invoice');
             $table->integer('payment_days')->nullable(); // untuk TOP
             $table->decimal('total_amount', 15, 2)->default(0);
-            $table->enum('status', ['draft', 'submitted', 'approved', 'delivered', 'cancelled'])->default('draft');
+            $table->enum('status', ['draft', 'submitted', 'approved', 'delivered', 'received', 'cancelled'])->default('draft');
             $table->text('notes')->nullable();
             $table->timestamps();
         });

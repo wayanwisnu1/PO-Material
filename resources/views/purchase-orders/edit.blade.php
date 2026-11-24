@@ -133,6 +133,7 @@
                 <option value="submitted" {{ old('status', $purchaseOrder->status) == 'submitted' ? 'selected' : '' }}>Submitted</option>
                 <option value="approved" {{ old('status', $purchaseOrder->status) == 'approved' ? 'selected' : '' }}>Approved</option>
                 <option value="delivered" {{ old('status', $purchaseOrder->status) == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                <option value="received" {{ old('status', $purchaseOrder->status) == 'received' ? 'selected' : '' }}>Received</option>
                 <option value="cancelled" {{ old('status', $purchaseOrder->status) == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
             </select>
             @error('status')

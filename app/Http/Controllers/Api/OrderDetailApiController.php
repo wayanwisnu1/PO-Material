@@ -39,7 +39,7 @@ class OrderDetailApiController extends Controller
             'delivery_schedule' => 'required|date',
             'payment_terms' => 'required|in:cash,termin,invoice',
             'payment_days' => 'nullable|integer',
-            'status' => 'required|in:draft,submitted,approved,delivered,cancelled',
+            'status' => 'required|in:draft,submitted,approved,delivered,received,cancelled',
             'notes' => 'nullable|string',
         ]);
 
@@ -70,6 +70,7 @@ class OrderDetailApiController extends Controller
             'submitted' => 'Submited',
             'approved' => 'Approved',
             'delivered' => 'Delivered',
+            'received' => 'Received',
             'cancelled' => 'Cancelled',
         ];
 

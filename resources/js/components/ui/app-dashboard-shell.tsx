@@ -69,7 +69,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export type DashboardRange = "7d" | "30d" | "90d" | "12m";
-export type OrderStatus = "paid" | "pending" | "refunded" | "failed" | "draft" | "submitted" | "approved" | "delivered" | "cancelled";
+export type OrderStatus = "paid" | "pending" | "refunded" | "failed" | "draft" | "submitted" | "approved" | "delivered" | "received" | "cancelled";
 
 export interface DashboardOrder {
   id: string;
@@ -1423,6 +1423,11 @@ const STATUS: Record<
   },
   delivered: {
     label: "Delivered",
+    ink: "var(--blk-success)",
+    soft: "var(--blk-success-soft)",
+  },
+  received: {
+    label: "Received",
     ink: "var(--blk-success)",
     soft: "var(--blk-success-soft)",
   },

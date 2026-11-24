@@ -33,6 +33,7 @@ const STATUS_MAP: Record<string, { label: string; className: string }> = {
   submitted: { label: 'Submitted', className: 'bg-blue-200 text-blue-800' },
   approved: { label: 'Approved', className: 'bg-emerald-200 text-emerald-800' },
   delivered: { label: 'Delivered', className: 'bg-green-200 text-green-800' },
+  received: { label: 'Received', className: 'bg-emerald-200 text-emerald-800' },
   cancelled: { label: 'Cancelled', className: 'bg-red-200 text-red-800' },
 };
 
@@ -287,7 +288,7 @@ export default function HotmixOrdersContent() {
       )}
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto hide-scrollbar">
           <table className="min-w-full divide-y divide-gray-200 table-auto">
             <thead className="bg-gray-50">
               <tr>

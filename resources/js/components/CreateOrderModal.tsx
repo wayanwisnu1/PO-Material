@@ -347,6 +347,7 @@ export default function CreateOrderModal({ open, onClose, onCreateSuccess }: Cre
                   <option value="submitted">Submitted</option>
                   <option value="approved">Approved</option>
                   <option value="delivered">Delivered</option>
+                  <option value="received">Received</option>
                   <option value="cancelled">Cancelled</option>
                 </select>
               </div>

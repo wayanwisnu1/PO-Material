@@ -42,7 +42,7 @@ class PurchaseOrderController extends Controller
             'delivery_schedule' => 'required|date_format:Y-m-d H:i',
             'payment_terms' => 'required|in:cash,termin,invoice',
             'payment_days' => 'nullable|integer|min:0',
-            'status' => 'required|in:draft,submitted,approved,delivered,cancelled',
+            'status' => 'required|in:draft,submitted,approved,delivered,received,cancelled',
             'notes' => 'nullable|string',
         ]);
 
@@ -85,7 +85,7 @@ class PurchaseOrderController extends Controller
             'delivery_schedule' => 'required|date_format:Y-m-d H:i',
             'payment_terms' => 'required|in:cash,termin,invoice',
             'payment_days' => 'nullable|integer|min:0',
-            'status' => 'required|in:draft,submitted,approved,delivered,cancelled',
+            'status' => 'required|in:draft,submitted,approved,delivered,received,cancelled',
             'notes' => 'nullable|string',
         ]);
 

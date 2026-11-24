@@ -55,15 +55,22 @@ class PurchaseOrderApiController extends Controller
         $monthlyOrders = (clone $baseQuery)->where('po_date', '>=', $startOfMonth)->count();
         $totalRevenue = (clone $baseQuery)->sum(\DB::raw('quantity * harga'));
         $monthlyRevenue = (clone $baseQuery)->where('po_date', '>=', $startOfMonth)->sum(\DB::raw('quantity * harga'));
+        
+        $pendingCount = (clone $baseQuery)->where('status', 'pending')->count();
+        $submittedCount = (clone $baseQuery)->where('status', 'submitted')->count();
+        
+        $revenueBeton = (clone $baseQuery)->where('po_type', 'beton')->sum(\DB::raw('quantity * harga'));
+        $revenueHotmix = (clone $baseQuery)->where('po_type', 'hotmix')->sum(\DB::raw('quantity * harga'));
+        $revenueBatu = (clone $baseQuery)->where('po_type', 'batu')->sum(\DB::raw('quantity * harga'));
 
         // Data untuk chart (7 hari terakhir)
         $chartData = [];
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
-            $count = (clone $baseQuery)->whereDate('po_date', $date)->count();
+            $rev = (clone $baseQuery)->whereDate('po_date', $date)->sum(\DB::raw('quantity * harga'));
             $chartData[] = [
                 'name' => now()->subDays($i)->format('d M'),
-                'value' => $count
+                'value' => $rev
             ];
         }
 
@@ -89,6 +96,11 @@ class PurchaseOrderApiController extends Controller
             'monthly_orders' => $monthlyOrders,
             'total_revenue' => $totalRevenue,
             'monthly_revenue' => $monthlyRevenue,
+            'pending_count' => $pendingCount,
+            'submitted_count' => $submittedCount,
+            'revenue_beton' => $revenueBeton,
+            'revenue_hotmix' => $revenueHotmix,
+            'revenue_batu' => $revenueBatu,
             'chart_data' => $chartData,
             'recent_orders' => $recentOrders
         ]);
@@ -127,7 +139,7 @@ class PurchaseOrderApiController extends Controller
             'delivery_schedule' => 'required|date',
             'payment_terms' => 'required|in:cash,termin,invoice',
             'payment_days' => 'nullable|integer',
-            'status' => 'nullable|in:draft,submitted,approved,delivered,cancelled,Draft,Submited,Submitted,Approved,Delivered,Cancelled',
+            'status' => 'nullable|in:draft,submitted,approved,delivered,received,cancelled,Draft,Submited,Submitted,Approved,Delivered,Received,Cancelled',
             'jenis_transaksi' => 'required|in:F,NF',
             'lokasi_sumber' => 'required|string',
             'foto_po' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -189,7 +201,7 @@ class PurchaseOrderApiController extends Controller
             'delivery_schedule' => 'sometimes|nullable|date',
             'payment_terms' => 'required|in:cash,termin,invoice',
             'payment_days' => 'nullable|integer',
-            'status' => 'nullable|in:draft,submitted,approved,delivered,cancelled,Draft,Submited,Submitted,Approved,Delivered,Cancelled',
+            'status' => 'nullable|in:draft,submitted,approved,delivered,received,cancelled,Draft,Submited,Submitted,Approved,Delivered,Received,Cancelled',
             'jenis_transaksi' => 'required|in:F,NF',
             'lokasi_sumber' => 'required|string',
             'foto_po' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -285,12 +297,14 @@ class PurchaseOrderApiController extends Controller
             'submited' => 'Submited', // Handle typo in DB if exists
             'approved' => 'Approved',
             'delivered' => 'Delivered',
+            'received' => 'Received',
             'cancelled' => 'Cancelled',
             'Draft' => 'Draft',
             'Submited' => 'Submited',
             'Submitted' => 'Submited',
             'Approved' => 'Approved',
             'Delivered' => 'Delivered',
+            'Received' => 'Received',
             'Cancelled' => 'Cancelled',
         ];
 

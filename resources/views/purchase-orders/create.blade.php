@@ -132,6 +132,7 @@
                 <option value="submitted" {{ old('status') == 'submitted' ? 'selected' : '' }}>Submitted</option>
                 <option value="approved" {{ old('status') == 'approved' ? 'selected' : '' }}>Approved</option>
                 <option value="delivered" {{ old('status') == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                <option value="received" {{ old('status') == 'received' ? 'selected' : '' }}>Received</option>
                 <option value="cancelled" {{ old('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
             </select>
             @error('status')
