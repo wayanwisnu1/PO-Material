@@ -72,7 +72,14 @@ class ActivityLogApiController extends Controller
 
     public function getLogs($subjectType = null, $subjectId = null)
     {
-        if (! Auth::user()->hasPermission('data.view_all')) {
+        $user = Auth::user();
+
+        // Daftar log lengkap hanya untuk pemegang audit.view (Superadmin).
+        // Log per-subjek (mis. riwayat sebuah PO) tetap boleh untuk data.view_all.
+        $canViewAudit = $user->hasPermission('audit.view');
+        $canViewSubjectLog = $subjectType && $subjectId && $user->hasPermission('data.view_all');
+
+        if (! $canViewAudit && ! $canViewSubjectLog) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 

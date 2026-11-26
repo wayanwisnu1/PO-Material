@@ -3,6 +3,7 @@ import AppDashboardShell, {
   sampleDashboardSeries,
   type DashboardOrder,
 } from '@/components/ui/app-dashboard-shell';
+import { useCurrentUser } from '@/lib/auth';
 
 const customers: DashboardOrder[] = [
   {
@@ -37,19 +38,36 @@ const customers: DashboardOrder[] = [
 export default function CustomersPage() {
   const [customers, setCustomers] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { canAny } = useCurrentUser();
+  const canCreate = canAny(['master.create', 'data.create']);
+  const canEdit = canAny(['master.edit', 'data.edit_draft', 'data.edit_all']);
 
-  React.useEffect(() => {
+  const canDelete = canAny(['master.delete', 'data.delete']);
+
+  const fetchCustomers = () => {
+    setLoading(true);
     fetch('/api/customers')
       .then(res => res.json())
       .then(json => {
         setCustomers(json.data || []);
         setLoading(false);
       })
-      .catch(err => {
-        console.error('Fetch error:', err);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
+  };
+
+  React.useEffect(() => {
+    fetchCustomers();
   }, []);
+
+  const handleDelete = (id: number) => {
+    if (confirm('Hapus customer ini?')) {
+      fetch(`/api/customers/${id}`, { 
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '' }
+      })
+        .then(() => fetchCustomers());
+    }
+  };
 
   const handleNavigate = (id: string) => {
     const routes: Record<string, string> = {
@@ -101,6 +119,7 @@ export default function CustomersPage() {
             <h2 className="text-2xl font-bold text-gray-900">Data Customer</h2>
             <p className="mt-1 text-sm text-gray-600">Kelola data customer material beton</p>
           </div>
+          {canCreate && (
           <button
             onClick={() => window.location.href = '/dashboard/create-customers?from=customers'}
             className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
@@ -110,70 +129,76 @@ export default function CustomersPage() {
             </svg>
             Buat Customer
           </button>
+          )}
         </div>
-        <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+<div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+          <table className="w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">ID</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Nama</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Telepon</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Dibuat Oleh</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Diubah</th>
+                <th scope="col" className="px-3 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Terdaftar</th>
+                <th scope="col" className="px-3 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white">
+              {loading ? (
                 <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">ID Customer</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Nama Customer</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Email</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Status</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Telepon</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Dibuat Oleh</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Terakhir Diubah</th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500">Terdaftar</th>
-                  <th scope="col" className="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider text-gray-500">Aksi</th>
+                  <td colSpan={9} className="px-3 py-4 text-center text-sm text-gray-500">Memuat...</td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 bg-white">
-                {loading ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">Memuat data...</td>
+              ) : customers.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-3 py-4 text-center text-sm text-gray-500">Kosong</td>
+                </tr>
+              ) : (
+                customers.map((c) => (
+                  <tr key={c.id} className="hover:bg-gray-50">
+                    <td className="px-3 py-4 text-sm text-gray-900">{c.id}</td>
+                    <td className="px-3 py-4 text-sm font-medium text-gray-900">{c.name}</td>
+                    <td className="px-3 py-4 text-sm text-gray-500">{c.email}</td>
+                    <td className="px-3 py-4 text-sm">
+                      <span className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-green-100 text-green-800">Active</span>
+                    </td>
+                    <td className="px-3 py-4 text-sm text-gray-900">{c.phone}</td>
+                    <td className="px-3 py-4 text-sm text-gray-500">{c.creator?.name || 'Sistem'}</td>
+                    <td className="px-3 py-4 text-sm text-gray-500">{c.updater?.name || '-'}</td>
+                    <td className="px-3 py-4 text-sm text-gray-900">{c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID') : '-'}</td>
+                    <td className="whitespace-nowrap px-3 py-4 text-right text-sm font-medium">
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <a
+                          href={`/dashboard/detail-customers/${c.id}`}
+                          className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                        >
+                          Detail
+                        </a>
+                        {canEdit && (
+                          <a
+                            href={`/dashboard/edit-customers/${c.id}`}
+                            className="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+                          >
+                            Edit
+                          </a>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(c.id)}
+                            className="inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+                          >
+                            Hapus
+                          </button>
+                        )}
+                      </div>
+                    </td>
                   </tr>
-                ) : customers.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-6 py-4 text-center text-sm text-gray-500">Belum ada data customer</td>
-                  </tr>
-                ) : (
-                  customers.map((c) => (
-                    <tr key={c.id} className="hover:bg-gray-50">
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{c.id}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm font-medium text-gray-900">{c.name}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-500">{c.email}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <span className="inline-flex rounded-full px-2 py-1 text-xs font-semibold bg-green-100 text-green-800">Active</span>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">{c.phone}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-500">{c.creator ? c.creator.name : <span className="text-gray-400">Sistem</span>}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-500">{c.updater ? c.updater.name : (c.creator ? '-' : <span className="text-gray-400">Sistem</span>)}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4">
-                        <div className="text-sm text-gray-900">{c.created_at ? new Date(c.created_at).toLocaleDateString('id-ID') : '-'}</div>
-                      </td>
-                      <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                        <a href={`/dashboard/detail-customers/${c.id}`} className="text-blue-600 hover:text-blue-900">Detail</a>
-                        <span className="mx-2 text-gray-300">|</span>
-                        <a href={`/dashboard/edit-customers/${c.id}`} className="text-indigo-600 hover:text-indigo-900">Edit</a>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>}
     />

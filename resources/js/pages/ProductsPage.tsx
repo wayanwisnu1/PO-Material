@@ -102,10 +102,27 @@ export default function ProductsPage() {
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {p.updater ? p.updater.name : (p.creator ? '-' : <span className="text-gray-400">Sistem</span>)}
                       </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium space-x-2">
-                        <a href={`/dashboard/detail-products/${p.id}`} className="text-blue-600">Detail</a>
-                        <a href={`/dashboard/edit-products/${p.id}`} className="text-indigo-600">Edit</a>
-                        <button onClick={() => handleDelete(p.id)} className="text-red-600">Hapus</button>
+                      <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                        <div className="inline-flex items-center justify-end gap-2">
+                          <a
+                            href={`/dashboard/detail-products/${p.id}`}
+                            className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                          >
+                            Detail
+                          </a>
+                          <a
+                            href={`/dashboard/edit-products/${p.id}`}
+                            className="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+                          >
+                            Edit
+                          </a>
+                          <button
+                            onClick={() => handleDelete(p.id)}
+                            className="inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+                          >
+                            Hapus
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

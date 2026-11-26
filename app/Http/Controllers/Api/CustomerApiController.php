@@ -16,4 +16,16 @@ class CustomerApiController extends Controller
             'data' => $customers
         ]);
     }
+
+    public function destroy($id)
+    {
+        $customer = Customer::findOrFail($id);
+        $customer->delete();
+
+        return response()->json([
+            'message' => 'Customer berhasil dihapus'
+        ]);
+    }
 }
+
+

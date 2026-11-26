@@ -50,6 +50,35 @@ export function clearAuthCache(): void {
   cache = null;
 }
 
+/**
+ * React hook: ambil user login (sekali, cached) untuk gating tombol/menu di UI.
+ * Mengembalikan { user, can, canAny } yang siap dipakai di JSX.
+ */
+import { useEffect, useState } from 'react';
+
+export function useCurrentUser() {
+  const [user, setUser] = useState<AuthUser | null>(cache);
+
+  useEffect(() => {
+    if (cache) {
+      setUser(cache);
+      return;
+    }
+    let alive = true;
+    fetchCurrentUser().then((u) => {
+      if (alive) setUser(u);
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const canPermission = (permission: string): boolean => can(user, permission);
+  const canAnyPermission = (permissions: string[]): boolean => canAny(user, permissions);
+
+  return { user, can: canPermission, canAny: canAnyPermission };
+}
+
 export async function logout(): Promise<void> {
   const token = document
     .querySelector('meta[name="csrf-token"]')

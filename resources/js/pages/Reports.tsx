@@ -1,38 +1,8 @@
 import React from 'react';
 import AppDashboardShell, {
   sampleDashboardSeries,
-  type DashboardOrder,
 } from '@/components/ui/app-dashboard-shell';
-
-const orders: DashboardOrder[] = [
-  {
-    id: 'HL-48213',
-    customer: 'Maren Okafor',
-    email: 'maren@fieldnote.studio',
-    status: 'paid',
-    channel: 'Direct',
-    date: '2026-10-08',
-    amount: 24_800,
-  },
-  {
-    id: 'HL-48212',
-    customer: 'Tomás Reyes',
-    email: 'tomas@kilnworks.co',
-    status: 'pending',
-    channel: 'Partner',
-    date: '2026-10-08',
-    amount: 112_000,
-  },
-  {
-    id: 'HL-48211',
-    customer: 'Ines Halvorsen',
-    email: 'ines@northpier.no',
-    status: 'paid',
-    channel: 'Organic',
-    date: '2026-10-07',
-    amount: 8_900,
-  },
-];
+import ReportsContent from '@/components/ReportsContent';
 
 export default function Reports() {
   const handleNavigate = (id: string) => {
@@ -41,7 +11,9 @@ export default function Reports() {
       analytics: '/analytics',
       orders: '/orders',
       'hotmix-orders': '/hotmix-orders',
+      'batu-orders': '/batu-orders',
       customers: '/customers',
+      suppliers: '/suppliers',
       products: '/products',
       'products-hotmix': '/products-hotmix',
       'products-batu': '/products-batu',
@@ -49,6 +21,7 @@ export default function Reports() {
       team: '/team',
       integrations: '/integrations',
       settings: '/settings',
+      'activity-logs': '/activity-logs',
     };
     
     if (routes[id]) {
@@ -60,7 +33,7 @@ export default function Reports() {
     <AppDashboardShell
       workspace={{ name: 'PO Material HBP', plan: 'Professional' }}
       user={{ name: 'Admin User', email: 'admin@pomaterial.co.id' }}
-      orders={orders}
+      orders={[]}
       getSeries={sampleDashboardSeries}
       defaultRange="30d"
       currency="IDR"
@@ -71,11 +44,13 @@ export default function Reports() {
       onNavigate={handleNavigate}
       onRangeChange={(range) => console.log('range', range)}
       customContent={
-        <div className="flex h-full items-center justify-center">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-gray-900">Reports</h2>
-            <p className="mt-2 text-gray-600">Halaman laporan</p>
+        <div className="p-8 max-w-7xl mx-auto w-full">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Laporan Penjualan</h1>
+            <p className="mt-2 text-gray-600">Analisa performa penjualan purchase order material beton, hotmix, dan batu.</p>
           </div>
+          
+          <ReportsContent />
         </div>
       }
     />

@@ -47,6 +47,8 @@ export default defineConfig({
                 'resources/js/create-suppliers.tsx',
                 'resources/js/activity-logs.tsx',
                 'resources/js/edit-suppliers.tsx',
+                'resources/js/edit-customers.tsx',
+                'resources/js/detail-customers.tsx',
                 'resources/js/detail-suppliers.tsx',
                 'resources/js/blade.js',
             ],

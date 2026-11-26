@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import { useCurrentUser } from '@/lib/auth';
 
 interface PurchaseOrder {
   id: number;
@@ -43,6 +44,9 @@ export default function BatuOrdersContent() {
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteSuccess, setDeleteSuccess] = useState(false);
+  const { canAny } = useCurrentUser();
+  const canEdit = canAny(['orders.edit', 'data.edit_draft', 'data.edit_all']);
+  const canDelete = canAny(['orders.delete', 'data.delete']);
 
   const fetchOrders = () => {
     setLoading(true);
@@ -296,48 +300,48 @@ export default function BatuOrdersContent() {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-        <div className="overflow-x-auto hide-scrollbar">
-          <table className="min-w-full divide-y divide-gray-200 table-auto">
+      <div className="rounded-lg border border-gray-200 bg-white shadow-sm">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full divide-y divide-gray-200 table-auto">
             <thead className="bg-gray-50">
               <tr>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-32">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Tanggal PO
                 </th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-32">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Tanggal Kirim
                 </th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-48">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Pelanggan
                 </th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-48">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Material
                 </th>
-                <th scope="col" className="px-4 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-600 w-28">
+                <th scope="col" className="px-4 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Jumlah
                 </th>
-                <th scope="col" className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 w-40">
+                <th scope="col" className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Total Harga
                 </th>
-                <th scope="col" className="px-4 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-600 w-32">
+                <th scope="col" className="px-4 py-4 text-center text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Jenis Transaksi
                 </th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-32">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Tipe Pembayaran
                 </th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-40">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Lokasi Sumber
                 </th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-32">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Dibuat Oleh
                 </th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-32">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Terakhir Diubah
                 </th>
-                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 w-32">
+                <th scope="col" className="px-4 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Status
                 </th>
-                <th scope="col" className="px-4 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 w-32">
+                <th scope="col" className="whitespace-nowrap px-4 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-600">
                   Aksi
                 </th>
               </tr>
@@ -397,28 +401,30 @@ export default function BatuOrdersContent() {
                         {getStatus(order.status).label}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-right">
-                      <div className="flex items-center justify-end gap-4">
+                    <td className="whitespace-nowrap px-4 py-4 text-right text-sm font-medium">
+                      <div className="inline-flex items-center justify-end gap-2">
                         <a
                           href={`/dashboard/detail-batu-orders/${order.id}?from=batu-orders`}
-                          className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                          className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
                         >
                           Detail
                         </a>
-                        <span className="text-gray-300">|</span>
-                        <a 
-                          href={`/dashboard/edit-batu-orders/${order.id}?from=batu-orders`}
-                          className="text-indigo-600 hover:text-indigo-800 font-medium text-sm"
-                        >
-                          Edit
-                        </a>
-                        <span className="text-gray-300">|</span>
-                        <button
-                          onClick={() => handleDelete(order.id)}
-                          className="text-red-600 hover:text-red-800 font-medium text-sm"
-                        >
-                          Hapus
-                        </button>
+                        {canEdit && (
+                          <a
+                            href={`/dashboard/edit-batu-orders/${order.id}?from=batu-orders`}
+                            className="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+                          >
+                            Edit
+                          </a>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(order.id)}
+                            className="inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+                          >
+                            Hapus
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

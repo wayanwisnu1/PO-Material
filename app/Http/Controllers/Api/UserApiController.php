@@ -48,7 +48,7 @@ class UserApiController extends Controller
     }
 
     /**
-     * Detail user.
+     * Detail user (termasuk permission IDs).
      */
     public function show(int $id): JsonResponse
     {
@@ -64,7 +64,53 @@ class UserApiController extends Controller
                     'id' => $user->role->id,
                     'name' => $user->role->name,
                 ] : null,
+                'permission_ids' => $user->permissions()->pluck('permissions.id')->all(),
             ]
+        ]);
+    }
+
+    /**
+     * List semua permission (untuk checkbox di form Team).
+     */
+    public function permissions(): JsonResponse
+    {
+        $permissions = \App\Models\Permission::orderBy('name', 'asc')
+            ->get(['id', 'name', 'description']);
+
+        return response()->json(['data' => $permissions]);
+    }
+
+    /**
+     * Katalog permission terkelompok + preset role untuk form Team.
+     */
+    public function permissionCatalog(): JsonResponse
+    {
+        $catalog = \App\Support\PermissionCatalog::groups();
+
+        // Lampirkan ID permission dari DB ke tiap aksi.
+        $ids = \App\Models\Permission::pluck('id', 'name');
+
+        foreach ($catalog as &$group) {
+            foreach ($group['actions'] as &$action) {
+                $action['id'] = $ids[$action['name']] ?? null;
+            }
+            unset($action);
+        }
+        unset($group);
+
+        $presets = [];
+        foreach (\App\Support\PermissionCatalog::presets() as $key => $preset) {
+            $presets[] = [
+                'key' => $key,
+                'label' => $preset['label'],
+                'description' => $preset['description'],
+                'permissions' => $preset['permissions'],
+            ];
+        }
+
+        return response()->json([
+            'groups' => $catalog,
+            'presets' => $presets,
         ]);
     }
 
@@ -77,17 +123,21 @@ class UserApiController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6'],
-            'role_id' => ['required', 'integer', 'exists:roles,id'],
+            'role_id' => ['nullable', 'integer', 'exists:roles,id'],
             'is_active' => ['nullable', 'boolean'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['integer', 'exists:permissions,id'],
         ]);
 
         $user = User::create([
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role_id' => $validated['role_id'],
+            'role_id' => $validated['role_id'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
+
+        $this->syncPermissions($user, $validated['permissions'] ?? []);
 
         return response()->json([
             'message' => 'User berhasil dibuat.',
@@ -100,18 +150,23 @@ class UserApiController extends Controller
                     'id' => $user->role->id,
                     'name' => $user->role->name,
                 ] : null,
+                'permission_ids' => $user->permissions()->pluck('permissions.id')->all(),
             ],
         ], 201);
     }
 
+    protected function syncPermissions(User $user, array $permissionIds): void
+    {
+        $user->permissions()->sync($permissionIds);
+    }
+
     /**
-     * Update user (termasuk reset password & ganti role).
+     * Update user (termasuk reset password & ganti role/permission).
      */
     public function update(Request $request, int $id): JsonResponse
     {
         $user = User::findOrFail($id);
 
-        // Hindari edit diri sendiri lewat endpoint ini (kecuali superadmin)
         if ($user->id === auth()->id() && !auth()->user()->hasRole('superadmin')) {
             return response()->json(['message' => 'Tidak bisa mengedit akun sendiri.'], 403);
         }
@@ -120,27 +175,23 @@ class UserApiController extends Controller
             'name' => ['sometimes', 'string', 'max:255'],
             'email' => ['sometimes', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => ['nullable', 'string', 'min:6'],
-            'role_id' => ['sometimes', 'integer', 'exists:roles,id'],
+            'role_id' => ['nullable', 'integer', 'exists:roles,id'],
             'is_active' => ['sometimes', 'boolean'],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['integer', 'exists:permissions,id'],
         ]);
 
-        if (isset($validated['name'])) {
-            $user->name = $validated['name'];
-        }
-        if (isset($validated['email'])) {
-            $user->email = $validated['email'];
-        }
-        if (!empty($validated['password'])) {
-            $user->password = Hash::make($validated['password']);
-        }
-        if (isset($validated['role_id'])) {
-            $user->role_id = $validated['role_id'];
-        }
-        if (isset($validated['is_active'])) {
-            $user->is_active = $validated['is_active'];
-        }
+        if (isset($validated['name'])) $user->name = $validated['name'];
+        if (isset($validated['email'])) $user->email = $validated['email'];
+        if (!empty($validated['password'])) $user->password = Hash::make($validated['password']);
+        if (array_key_exists('role_id', $validated)) $user->role_id = $validated['role_id'];
+        if (isset($validated['is_active'])) $user->is_active = $validated['is_active'];
 
         $user->save();
+
+        if (array_key_exists('permissions', $validated)) {
+            $this->syncPermissions($user, $validated['permissions'] ?? []);
+        }
 
         return response()->json([
             'message' => 'User berhasil diperbarui.',
@@ -153,6 +204,7 @@ class UserApiController extends Controller
                     'id' => $user->role->id,
                     'name' => $user->role->name,
                 ] : null,
+                'permission_ids' => $user->permissions()->pluck('permissions.id')->all(),
             ],
         ]);
     }
