@@ -11,6 +11,8 @@ import {
   type SVGProps,
 } from "react";
 
+import { AUTH_UPDATED_EVENT } from "@/lib/auth";
+
 declare global {
   interface Window {
     __HALCYON_PROFILE__?: {
@@ -173,25 +175,25 @@ export const DASHBOARD_NAV: DashboardNavGroup[] = [
         id: "customers",
         label: "Customer",
         icon: Users,
-        anyPermission: ["master.view", "data.view_own", "data.view_all"],
+        permission: "master.view",
       },
       {
         id: "products",
         label: "Products Beton",
         icon: Package,
-        anyPermission: ["master.view", "data.view_own", "data.view_all"],
+        permission: "master.view",
       },
       {
         id: "products-hotmix",
         label: "Products Hotmix",
         icon: Package,
-        anyPermission: ["master.view", "data.view_own", "data.view_all"],
+        permission: "master.view",
       },
       {
         id: "products-batu",
         label: "Products Batu",
         icon: Package,
-        anyPermission: ["master.view", "data.view_own", "data.view_all"],
+        permission: "master.view",
       },
       {
         id: "reports",
@@ -499,46 +501,53 @@ export function AppDashboardShell({
       setGranted(permissions);
       return;
     }
+
     let cancelled = false;
-    fetch("/api/me", {
-      headers: { Accept: "application/json" },
-      credentials: "same-origin",
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (cancelled) return;
-        const nextGranted = data?.user?.permissions ?? [];
-        setGranted(nextGranted);
-        const nextProfile = data?.user
-          ? {
-              name: data.user.name ?? "",
-              email: data.user.email ?? "",
-              role: data.user.role ?? null,
-            }
-          : null;
-        if (nextProfile) {
-          setProfile(nextProfile);
-          // Persist across full-page navigations so the footer is stable
-          // and never flashes the placeholder user for ~1s.
-          try {
-            window.sessionStorage.setItem(
-              "__halcyon_profile__",
-              JSON.stringify(nextProfile),
-            );
-            window.sessionStorage.setItem(
-              "__halcyon_permissions__",
-              JSON.stringify(nextGranted),
-            );
-          } catch {
-            /* ignore quota/private-mode errors */
-          }
-        }
+
+    const loadPermissions = () => {
+      fetch("/api/me", {
+        headers: { Accept: "application/json" },
+        credentials: "same-origin",
       })
-      .catch(() => {
-        if (!cancelled) setGranted([]);
-      });
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (cancelled) return;
+          const nextGranted = data?.user?.permissions ?? [];
+          setGranted(nextGranted);
+          const nextProfile = data?.user
+            ? {
+                name: data.user.name ?? "",
+                email: data.user.email ?? "",
+                role: data.user.role ?? null,
+              }
+            : null;
+          if (nextProfile) {
+            setProfile(nextProfile);
+            try {
+              window.sessionStorage.setItem(
+                "__halcyon_profile__",
+                JSON.stringify(nextProfile),
+              );
+              window.sessionStorage.setItem(
+                "__halcyon_permissions__",
+                JSON.stringify(nextGranted),
+              );
+            } catch {
+              /* ignore quota/private-mode errors */
+            }
+          }
+        })
+        .catch(() => {
+          if (!cancelled) setGranted([]);
+        });
+    };
+
+    loadPermissions();
+    window.addEventListener(AUTH_UPDATED_EVENT, loadPermissions);
+
     return () => {
       cancelled = true;
+      window.removeEventListener(AUTH_UPDATED_EVENT, loadPermissions);
     };
   }, [permissions]);
 

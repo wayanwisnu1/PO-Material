@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useCurrentUser } from '@/lib/auth';
 
 const params = new URLSearchParams(window.location.search);
 const from = params.get('from') || 'dashboard';
@@ -23,6 +24,8 @@ interface DetailSupplierViewProps {
 export default function DetailSupplierView({ supplierId, onBack }: DetailSupplierViewProps) {
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [loading, setLoading] = useState(true);
+  const { canAny } = useCurrentUser();
+  const canEdit = canAny(['master.edit']);
 
   useEffect(() => {
     fetch(`/api/suppliers/${supplierId}`)
@@ -78,15 +81,17 @@ export default function DetailSupplierView({ supplierId, onBack }: DetailSupplie
           <p className="mt-1 text-sm text-gray-600">Informasi lengkap supplier</p>
         </div>
         <div className="flex gap-2">
-          <a
-            href={`/dashboard/edit-suppliers/${supplierId}?from=${from}`}
-            className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-            </svg>
-            Edit
-          </a>
+          {canEdit && (
+            <a
+              href={`/dashboard/edit-suppliers/${supplierId}?from=${from}`}
+              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            >
+              <svg className="mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              Edit
+            </a>
+          )}
           <button
             onClick={() => window.location.href = backUrl}
             className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"

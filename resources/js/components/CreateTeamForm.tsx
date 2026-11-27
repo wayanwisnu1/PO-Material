@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import PermissionSelector from './PermissionSelector';
+import { notifyAuthUpdated } from '@/lib/auth';
 
 interface Preset {
   key: string;
@@ -80,6 +81,7 @@ export default function CreateTeamForm({ onSuccess, onCancel }: CreateTeamFormPr
       const json = await response.json();
 
       if (response.ok) {
+        notifyAuthUpdated();
         Swal.fire('Berhasil!', 'User baru berhasil ditambahkan.', 'success').then(() => onSuccess());
       } else {
         const firstError = json.errors ? Object.values(json.errors)[0] : json.message;

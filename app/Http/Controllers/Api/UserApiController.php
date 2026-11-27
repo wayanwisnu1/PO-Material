@@ -58,6 +58,7 @@ class UserApiController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'password' => $user->password_plain,
                 'is_active' => $user->is_active,
                 'role_id' => $user->role_id,
                 'role' => $user->role ? [
@@ -133,6 +134,7 @@ class UserApiController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'password_plain' => $validated['password'],
             'role_id' => $validated['role_id'] ?? null,
             'is_active' => $validated['is_active'] ?? true,
         ]);
@@ -183,7 +185,10 @@ class UserApiController extends Controller
 
         if (isset($validated['name'])) $user->name = $validated['name'];
         if (isset($validated['email'])) $user->email = $validated['email'];
-        if (!empty($validated['password'])) $user->password = Hash::make($validated['password']);
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+            $user->password_plain = $validated['password'];
+        }
         if (array_key_exists('role_id', $validated)) $user->role_id = $validated['role_id'];
         if (isset($validated['is_active'])) $user->is_active = $validated['is_active'];
 

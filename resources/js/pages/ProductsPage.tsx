@@ -1,9 +1,14 @@
 import React from 'react';
 import AppDashboardShell, { sampleDashboardSeries } from '@/components/ui/app-dashboard-shell';
+import { useCurrentUser } from '@/lib/auth';
 
 export default function ProductsPage() {
   const [products, setProducts] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { canAny } = useCurrentUser();
+  const canCreate = canAny(['master.create']);
+  const canEdit = canAny(['master.edit']);
+  const canDelete = canAny(['master.delete']);
 
   const fetchProducts = () => {
     setLoading(true);
@@ -65,15 +70,17 @@ export default function ProductsPage() {
               <h2 className="text-2xl font-bold text-gray-900">Data Produk (Material)</h2>
               <p className="mt-1 text-sm text-gray-600">Kelola daftar jenis material beton</p>
             </div>
-            <button
-              onClick={() => window.location.href = '/dashboard/create-products'}
-              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              Tambah Produk
-            </button>
+            {canCreate && (
+              <button
+                onClick={() => window.location.href = '/dashboard/create-products'}
+                className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Tambah Produk
+              </button>
+            )}
           </div>
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
             <table className="min-w-full divide-y divide-gray-200">
@@ -110,18 +117,22 @@ export default function ProductsPage() {
                           >
                             Detail
                           </a>
-                          <a
-                            href={`/dashboard/edit-products/${p.id}`}
-                            className="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
-                          >
-                            Edit
-                          </a>
-                          <button
-                            onClick={() => handleDelete(p.id)}
-                            className="inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
-                          >
-                            Hapus
-                          </button>
+                          {canEdit && (
+                            <a
+                              href={`/dashboard/edit-products/${p.id}`}
+                              className="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+                            >
+                              Edit
+                            </a>
+                          )}
+                          {canDelete && (
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+                            >
+                              Hapus
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

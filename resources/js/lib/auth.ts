@@ -14,6 +14,20 @@ export interface AuthState {
 let cache: AuthUser | null = null;
 let pending: Promise<AuthUser | null> | null = null;
 
+export const AUTH_UPDATED_EVENT = 'halcyon:auth-updated';
+
+export function notifyAuthUpdated(): void {
+  clearAuthCache();
+  if (typeof window !== 'undefined') {
+    try {
+      window.sessionStorage.removeItem('__halcyon_permissions__');
+    } catch {
+      /* ignore quota/private-mode errors */
+    }
+    window.dispatchEvent(new Event(AUTH_UPDATED_EVENT));
+  }
+}
+
 export function fetchCurrentUser(): Promise<AuthUser | null> {
   if (cache) return Promise.resolve(cache);
   if (pending) return pending;
@@ -48,6 +62,17 @@ export function canAny(user: AuthUser | null, permissions: string[]): boolean {
 
 export function clearAuthCache(): void {
   cache = null;
+  pending = null;
+}
+
+export function refreshCurrentUser(): Promise<AuthUser | null> {
+  return fetchCurrentUserAfterReset();
+}
+
+function fetchCurrentUserAfterReset(): Promise<AuthUser | null> {
+  cache = null;
+  pending = null;
+  return fetchCurrentUser();
 }
 
 /**
@@ -60,16 +85,17 @@ export function useCurrentUser() {
   const [user, setUser] = useState<AuthUser | null>(cache);
 
   useEffect(() => {
-    if (cache) {
-      setUser(cache);
-      return;
-    }
     let alive = true;
-    fetchCurrentUser().then((u) => {
-      if (alive) setUser(u);
-    });
+    const load = () => {
+      refreshCurrentUser().then((u) => {
+        if (alive) setUser(u);
+      });
+    };
+    load();
+    window.addEventListener(AUTH_UPDATED_EVENT, load);
     return () => {
       alive = false;
+      window.removeEventListener(AUTH_UPDATED_EVENT, load);
     };
   }, []);
 
@@ -85,6 +111,12 @@ export async function logout(): Promise<void> {
     ?.getAttribute('content');
 
   clearAuthCache();
+  try {
+    window.sessionStorage.removeItem('__halcyon_permissions__');
+    window.sessionStorage.removeItem('__halcyon_profile__');
+  } catch {
+    /* ignore quota/private-mode errors */
+  }
 
   await fetch('/logout', {
     method: 'POST',

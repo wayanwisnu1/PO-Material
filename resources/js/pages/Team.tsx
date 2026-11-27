@@ -232,12 +232,31 @@ export default function Team() {
                       <td className="px-6 py-4 text-sm text-gray-500">
                         {u.created_at ? new Date(u.created_at).toLocaleDateString('id-ID') : '-'}
                       </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium space-x-2">
-                        <button onClick={() => openEditModal(u)} className="text-indigo-600 hover:text-indigo-900">Edit</button>
-                        <button onClick={() => toggleStatus(u)} className={u.is_active ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}>
-                          {u.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-                        </button>
-                        <button onClick={() => handleDelete(u)} className="text-red-600 hover:text-red-900">Hapus</button>
+                      <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                        <div className="inline-flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openEditModal(u)}
+                            className="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => toggleStatus(u)}
+                            className={`inline-flex items-center justify-center rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors ${
+                              u.is_active
+                                ? 'border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100'
+                                : 'border-green-200 bg-green-50 text-green-700 hover:bg-green-100'
+                            }`}
+                          >
+                            {u.is_active ? 'Nonaktifkan' : 'Aktifkan'}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(u)}
+                            className="inline-flex items-center justify-center rounded-md border border-red-200 bg-red-50 px-2.5 py-1 text-xs font-semibold text-red-700 transition-colors hover:bg-red-100"
+                          >
+                            Hapus
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))

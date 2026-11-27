@@ -39,10 +39,10 @@ export default function CustomersPage() {
   const [customers, setCustomers] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { canAny } = useCurrentUser();
-  const canCreate = canAny(['master.create', 'data.create']);
-  const canEdit = canAny(['master.edit', 'data.edit_draft', 'data.edit_all']);
+  const canCreate = canAny(['master.create']);
+  const canEdit = canAny(['master.edit']);
 
-  const canDelete = canAny(['master.delete', 'data.delete']);
+  const canDelete = canAny(['master.delete']);
 
   const fetchCustomers = () => {
     setLoading(true);

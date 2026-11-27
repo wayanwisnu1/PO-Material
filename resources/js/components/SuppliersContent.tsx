@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useCurrentUser } from '@/lib/auth';
 
 interface Supplier {
   id: number;
@@ -15,6 +16,9 @@ interface Supplier {
 export default function SuppliersContent() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(true);
+  const { canAny } = useCurrentUser();
+  const canCreate = canAny(['master.create']);
+  const canEdit = canAny(['master.edit']);
 
   useEffect(() => {
     fetchSuppliers();
@@ -60,15 +64,17 @@ export default function SuppliersContent() {
             Kelola data supplier beton
           </p>
         </div>
-        <a
-          href="/dashboard/create-suppliers?from=suppliers"
-          className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Buat Supplier Baru
-        </a>
+        {canCreate && (
+          <a
+            href="/dashboard/create-suppliers?from=suppliers"
+            className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            <svg className="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Buat Supplier Baru
+          </a>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
@@ -140,19 +146,22 @@ export default function SuppliersContent() {
                       {formatDate(supplier.created_at)}
                     </td>
                     <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
-                      <a
-                        href={`/dashboard/detail-suppliers/${supplier.id}?from=suppliers`}
-                        className="text-blue-600 hover:text-blue-900"
-                      >
-                        Detail
-                      </a>
-                      <span className="mx-2 text-gray-300">|</span>
-                      <a 
-                        href={`/dashboard/edit-suppliers/${supplier.id}?from=suppliers`}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Edit
-                      </a>
+                      <div className="inline-flex items-center justify-end gap-2">
+                        <a
+                          href={`/dashboard/detail-suppliers/${supplier.id}?from=suppliers`}
+                          className="inline-flex items-center justify-center rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 transition-colors hover:bg-blue-100"
+                        >
+                          Detail
+                        </a>
+                        {canEdit && (
+                          <a
+                            href={`/dashboard/edit-suppliers/${supplier.id}?from=suppliers`}
+                            className="inline-flex items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 transition-colors hover:bg-indigo-100"
+                          >
+                            Edit
+                          </a>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -35,11 +35,13 @@ Route::middleware(['auth'])->group(function () {
     Route::view('/hotmix-orders', 'hotmix-orders')->name('hotmix-orders');
     Route::view('/batu-orders', 'batu-orders')->name('batu-orders');
 
-    Route::view('/customers', 'customers')->name('customers');
-    Route::view('/suppliers', 'suppliers')->name('suppliers');
-    Route::view('/products', 'products')->name('products');
-    Route::view('/products-hotmix', 'products-hotmix')->name('products-hotmix');
-    Route::view('/products-batu', 'products-batu')->name('products-batu');
+    Route::middleware('permission:master.view')->group(function () {
+        Route::view('/customers', 'customers')->name('customers');
+        Route::view('/suppliers', 'suppliers')->name('suppliers');
+        Route::view('/products', 'products')->name('products');
+        Route::view('/products-hotmix', 'products-hotmix')->name('products-hotmix');
+        Route::view('/products-batu', 'products-batu')->name('products-batu');
+    });
 
     Route::middleware('permission:audit.view')->group(function () {
         Route::view('/activity-logs', 'activity-logs')->name('activity-logs');
@@ -49,6 +51,9 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/dashboard/create-orders', 'create-orders')->name('create-orders');
         Route::view('/dashboard/create-hotmix-orders', 'create-hotmix-orders')->name('create-hotmix-orders');
         Route::view('/dashboard/create-batu-orders', 'create-batu-orders')->name('create-batu-orders');
+    });
+
+    Route::middleware('permission:master.create')->group(function () {
         Route::view('/dashboard/create-customers', 'create-customers')->name('create-customers');
         Route::view('/dashboard/create-suppliers', 'create-suppliers')->name('create-suppliers');
         Route::view('/dashboard/create-products', 'create-products')->name('create-products');
@@ -60,6 +65,9 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/dashboard/edit-orders/{id}', 'edit-orders')->name('edit-orders');
         Route::view('/dashboard/edit-hotmix-orders/{id}', 'edit-hotmix-orders')->name('edit-hotmix-orders');
         Route::view('/dashboard/edit-batu-orders/{id}', 'edit-batu-orders')->name('edit-batu-orders');
+    });
+
+    Route::middleware('permission:master.edit')->group(function () {
         Route::view('/dashboard/edit-customers/{id}', 'edit-customers')->name('edit-customers');
         Route::view('/dashboard/edit-suppliers/{id}', 'edit-suppliers')->name('edit-suppliers');
         Route::view('/dashboard/edit-products/{id}', 'edit-products')->name('edit-products');
@@ -71,6 +79,9 @@ Route::middleware(['auth'])->group(function () {
         Route::view('/dashboard/detail-orders/{id}', 'detail-orders')->name('detail-orders');
         Route::view('/dashboard/detail-hotmix-orders/{id}', 'detail-hotmix-orders')->name('detail-hotmix-orders');
         Route::view('/dashboard/detail-batu-orders/{id}', 'detail-batu-orders')->name('detail-batu-orders');
+    });
+
+    Route::middleware('permission:master.view')->group(function () {
         Route::view('/dashboard/detail-customers/{id}', 'detail-customers')->name('detail-customers');
         Route::view('/dashboard/detail-suppliers/{id}', 'detail-suppliers')->name('detail-suppliers');
         Route::view('/dashboard/detail-products/{id}', 'detail-products')->name('detail-products');
@@ -86,6 +97,11 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
         Route::get('/purchase-orders/{id}', [App\Http\Controllers\Api\PurchaseOrderApiController::class, 'show']);
         Route::get('/orders/{id}', [App\Http\Controllers\Api\OrderDetailApiController::class, 'show']);
 
+        Route::get('/activity-logs', [App\Http\Controllers\Api\ActivityLogApiController::class, 'getLogs']);
+        Route::get('/activity-logs/{subjectType}/{subjectId}', [App\Http\Controllers\Api\ActivityLogApiController::class, 'getLogs']);
+    });
+
+    Route::middleware('permission:orders.view,master.view,data.view_own,data.view_all')->group(function () {
         Route::get('/customers', [App\Http\Controllers\Api\CustomerApiController::class, 'index']);
         Route::get('/customers/{id}', [App\Http\Controllers\Api\CustomerDetailApiController::class, 'show']);
 
@@ -100,12 +116,13 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
 
         Route::get('/products-batu', [App\Http\Controllers\Api\ProductBatuApiController::class, 'index']);
         Route::get('/products-batu/{id}', [App\Http\Controllers\Api\ProductBatuApiController::class, 'show']);
-        Route::get('/activity-logs', [App\Http\Controllers\Api\ActivityLogApiController::class, 'getLogs']);
-        Route::get('/activity-logs/{subjectType}/{subjectId}', [App\Http\Controllers\Api\ActivityLogApiController::class, 'getLogs']);
     });
 
-    Route::middleware('permission:orders.create,master.create,data.create')->group(function () {
+    Route::middleware('permission:orders.create,data.create')->group(function () {
         Route::post('/purchase-orders', [App\Http\Controllers\Api\PurchaseOrderApiController::class, 'store']);
+    });
+
+    Route::middleware('permission:master.create')->group(function () {
         Route::post('/customers', [App\Http\Controllers\Api\CustomerDetailApiController::class, 'store']);
         Route::post('/suppliers', [App\Http\Controllers\Api\SupplierDetailApiController::class, 'store']);
         Route::post('/products', [App\Http\Controllers\Api\ProductApiController::class, 'store']);
@@ -118,6 +135,9 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
             ->middleware('can.modify.order:update');
         Route::put('/orders/{id}', [App\Http\Controllers\Api\OrderDetailApiController::class, 'update'])
             ->middleware('can.modify.order:update');
+    });
+
+    Route::middleware('permission:master.edit')->group(function () {
         Route::put('/customers/{id}', [App\Http\Controllers\Api\CustomerDetailApiController::class, 'update']);
         Route::put('/suppliers/{id}', [App\Http\Controllers\Api\SupplierDetailApiController::class, 'update']);
         Route::put('/products/{id}', [App\Http\Controllers\Api\ProductApiController::class, 'update']);
@@ -136,8 +156,11 @@ Route::middleware(['auth'])->prefix('api')->group(function () {
         Route::delete('/users/{id}', [App\Http\Controllers\Api\UserApiController::class, 'destroy']);
     });
 
-    Route::middleware('permission:orders.delete,master.delete,data.delete')->group(function () {
+    Route::middleware('permission:orders.delete,data.delete')->group(function () {
         Route::delete('/purchase-orders/{id}', [App\Http\Controllers\Api\PurchaseOrderApiController::class, 'destroy']);
+    });
+
+    Route::middleware('permission:master.delete')->group(function () {
         Route::delete('/customers/{id}', [App\Http\Controllers\Api\CustomerApiController::class, 'destroy']);
         Route::delete('/products/{id}', [App\Http\Controllers\Api\ProductApiController::class, 'destroy']);
         Route::delete('/products-hotmix/{id}', [App\Http\Controllers\Api\ProductHotmixApiController::class, 'destroy']);

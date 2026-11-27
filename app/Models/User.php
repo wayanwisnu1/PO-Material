@@ -23,6 +23,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'password_plain',
         'role_id',
         'is_active',
     ];
@@ -62,18 +63,20 @@ class User extends Authenticatable
      */
     public static array $legacyPermissionMap = [
         // view
-        'data.view_all' => ['orders.view', 'master.view', 'report.view'],
-        'data.view_own' => ['orders.view', 'master.view'],
+        // Catatan: scope (data.*) TIDAK memberi hak master.* / report.*.
+        // Hak akses modul murni mengikuti checkbox modul di form Team.
+        'data.view_all' => ['orders.view'],
+        'data.view_own' => ['orders.view'],
 
         // create
-        'data.create' => ['orders.create', 'master.create'],
+        'data.create' => ['orders.create'],
 
         // edit
-        'data.edit_all' => ['orders.edit', 'master.edit'],
+        'data.edit_all' => ['orders.edit'],
         'data.edit_draft' => ['orders.edit'],
 
         // delete
-        'data.delete' => ['orders.delete', 'master.delete'],
+        'data.delete' => ['orders.delete'],
 
         // report
         'report.export' => ['report.view', 'report.export'],
