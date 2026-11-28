@@ -5,6 +5,10 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
+import { FileDown, Filter, ClipboardList, Box, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { DateRangePicker } from '@/components/ui/date-range-picker';
 
 interface PurchaseOrder {
   id: number;
@@ -134,77 +138,83 @@ export default function ReportsContent() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Start Date</label>
-            <div className="relative">
-              <input 
-                type="date" 
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 pl-3 pr-10"
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
+        <div className="flex flex-wrap items-center gap-6">
+          <div className="flex flex-1 flex-wrap items-end gap-4">
+            <DateRangePicker
+              startDate={startDate}
+              endDate={endDate}
+              onChange={(start, end) => {
+                setStartDate(start);
+                setEndDate(end);
+              }}
+              label="Periode Laporan (Start - End)"
+              className="flex-1 min-w-[300px]"
+            />
+
+            <div className="space-y-1.5 min-w-[200px]">
+              <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest ml-1">
+                Material Type
+              </Label>
+              <div className="relative group">
+                <select
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="flex h-11 w-full rounded-md border border-gray-200 bg-gray-50/50 px-3 py-2 text-sm ring-offset-background focus:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 appearance-none transition-all cursor-pointer"
+                >
+                  <option value="all">Semua Material</option>
+                  <option value="beton">Beton</option>
+                  <option value="hotmix">Hotmix</option>
+                  <option value="batu">Batu</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 group-hover:text-blue-500 transition-colors">
+                  <Filter className="h-4 w-4" />
+                </div>
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">End Date</label>
-            <div className="relative">
-              <input 
-                type="date" 
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 py-2 pl-3 pr-10"
-              />
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Material Type</label>
-            <div className="relative">
-              <select 
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 appearance-none bg-white pr-8 py-2"
-              >
-                <option value="all">Semua Material</option>
-                <option value="beton">Beton</option>
-                <option value="hotmix">Hotmix</option>
-                <option value="batu">Batu</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/></svg>
-              </div>
-            </div>
-          </div>
-          <div>
-            <button 
+
+          <div className="pt-5 lg:pt-0">
+            <Button 
               onClick={handleExport}
-              className="inline-flex items-center rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 transition-colors shadow-sm"
+              className="h-11 px-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm font-semibold gap-2"
             >
-              Export (.xlsx)
-            </button>
+              <FileDown className="h-4 w-4" />
+              Export Excel
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">Total Purchase Orders</p>
-          <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.totalOrders.toLocaleString('id-ID')}</h3>
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+          <div className="h-12 w-12 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+            <ClipboardList className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Purchase Orders</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-0.5">{stats.totalOrders.toLocaleString('id-ID')}</h3>
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">Total Volume Terjual</p>
-          <h3 className="text-3xl font-bold text-gray-900 mt-1">{stats.totalVolume.toLocaleString('id-ID')} <span className="text-sm font-normal text-gray-500 ml-1">m³</span></h3>
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+          <div className="h-12 w-12 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
+            <Box className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Volume Terjual</p>
+            <h3 className="text-2xl font-bold text-gray-900 mt-0.5">
+              {stats.totalVolume.toLocaleString('id-ID')} <span className="text-sm font-normal text-gray-500 ml-0.5">m³</span>
+            </h3>
+          </div>
         </div>
-        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-sm font-medium text-gray-500">Total Nilai Penjualan</p>
-          <h3 className="text-3xl font-bold text-blue-600 mt-1">{formatCurrency(stats.totalAmount)}</h3>
+        <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center gap-4">
+          <div className="h-12 w-12 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <TrendingUp className="h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Nilai Penjualan</p>
+            <h3 className="text-2xl font-bold text-blue-600 mt-0.5">{formatCurrency(stats.totalAmount)}</h3>
+          </div>
         </div>
       </div>
 
